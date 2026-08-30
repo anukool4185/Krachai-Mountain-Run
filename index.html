@@ -98,6 +98,28 @@
     </style>
 </head>
 <body class="theme-pastel">
+    <!-- Banner แจ้งเตือนเมื่อเปิดใน in-app browser (LINE/FB/IG) -->
+    <div id="inappBanner" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+        <div class="card max-w-sm w-full text-center">
+            <p class="text-5xl mb-4">🌐</p>
+            <h2 class="text-xl font-bold gradient-text mb-3">เปิดในเบราว์เซอร์ก่อนนะ</h2>
+            <p class="text-sm mb-5 opacity-80">คุณกำลังเปิดผ่านแอป (LINE/Facebook) ซึ่ง<b>ดาวน์โหลดรูปไม่ได้</b><br>กรุณาเปิดใน Chrome หรือ Safari</p>
+
+            <div id="bannerAndroid" class="hidden mb-4">
+                <button onclick="openInChrome()" class="btn-primary w-full mb-2">🚀 เปิดใน Chrome เลย</button>
+            </div>
+
+            <div id="bannerIOS" class="hidden mb-4 text-left bg-yellow-100 rounded-xl p-4 text-sm" style="color:#333;">
+                <p class="font-bold mb-2">📱 วิธีเปิดใน Safari:</p>
+                <p>1. กดปุ่ม <b>•••</b> มุมขวาบน (หรือล่าง)</p>
+                <p>2. เลือก <b>"เปิดในเบราว์เซอร์"</b> หรือ <b>"Open in Safari"</b></p>
+            </div>
+
+            <button onclick="copyPageLink()" class="btn-primary w-full mb-2">📋 คัดลอกลิงก์</button>
+            <button onclick="document.getElementById('inappBanner').classList.add('hidden')" class="text-sm underline opacity-70 mt-2">ปิดหน้าต่างนี้ (ดูรูปได้ แต่ดาวน์โหลดไม่ได้)</button>
+        </div>
+    </div>
+
     <!-- Setup Modal (ตั้งค่า Web App URL) -->
     <div id="setupModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden" style="background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);">
         <div class="card max-w-md w-full">
@@ -115,7 +137,7 @@
                 <div class="floating">
                     <h1 class="text-4xl font-bold">✨ <span class="gradient-text">แกลเลอรีกิจกรรม</span> ✨</h1>
                     <p class="text-sm mt-1 font-medium">💕 ชมรูปสวยๆ จากกิจกรรม 📸</p>
-                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v5.6 - ดาวน์โหลดครบทุกเครื่อง</p>
+                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v5.8 - ตรวจจับ LINE</p>
                 </div>
                 <div class="flex gap-2">
                     <button id="adminBtn" onclick="toggleAdmin()" class="btn-primary">🔐 Admin</button>
@@ -232,8 +254,54 @@
         window.onload = () => {
             initTheme();
             setupZoomPan();
+            checkInAppBrowser();
             loadFromDrive();
         };
+
+        // ตรวจจับ in-app browser (LINE/Facebook/Instagram) ที่บล็อกดาวน์โหลด
+        function checkInAppBrowser() {
+            const ua = navigator.userAgent || '';
+            const isLine = /Line/i.test(ua);
+            const isFB = /FBAN|FBAV|FB_IAB/i.test(ua);
+            const isIG = /Instagram/i.test(ua);
+            const isInApp = isLine || isFB || isIG;
+
+            if (!isInApp) return;
+
+            const isAndroid = /Android/i.test(ua);
+            const isIOS = /iPhone|iPad|iPod/i.test(ua);
+
+            document.getElementById('inappBanner').classList.remove('hidden');
+            if (isAndroid) document.getElementById('bannerAndroid').classList.remove('hidden');
+            if (isIOS) document.getElementById('bannerIOS').classList.remove('hidden');
+        }
+
+        // เปิดใน Chrome (Android)
+        function openInChrome() {
+            const url = window.location.href;
+            // ใช้ intent เพื่อเปิด Chrome บน Android
+            const intentUrl = 'intent://' + url.replace(/^https?:\/\//, '') +
+                '#Intent;scheme=https;package=com.android.chrome;end';
+            window.location.href = intentUrl;
+        }
+
+        // คัดลอกลิงก์
+        async function copyPageLink() {
+            const url = window.location.href;
+            try {
+                await navigator.clipboard.writeText(url);
+                alert('✅ คัดลอกลิงก์แล้ว!\nวางในเบราว์เซอร์ Chrome/Safari เพื่อเปิด');
+            } catch (e) {
+                // fallback
+                const input = document.createElement('input');
+                input.value = url;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                alert('✅ คัดลอกลิงก์แล้ว!\nวางในเบราว์เซอร์ Chrome/Safari เพื่อเปิด');
+            }
+        }
 
         function initTheme() { document.body.className = 'theme-' + currentTheme; }
         function toggleTheme() {
@@ -542,14 +610,38 @@
             resetZoom();
             document.getElementById('modalImage').src = url;
             document.getElementById('modalImage').setAttribute('referrerpolicy', 'no-referrer');
-            document.getElementById('downloadStatus').innerHTML = '';
             document.getElementById('imageModal').classList.remove('hidden');
-            // เริ่มโหลดรูปเต็มไว้ล่วงหน้า (background) เพื่อให้กดดาวน์โหลดแล้ว share ได้ทันที
+            // ปิดปุ่มดาวน์โหลด/แชร์ระหว่างโหลด (เปิดเมื่อรูปพร้อม เพื่อให้ share ทำงานทันที)
+            setActionButtons('loading');
+            // เริ่มโหลดรูปเต็มไว้ล่วงหน้า (background)
             preloadPromise = preloadFullImage(fileId);
         }
         function closeModal() {
             document.getElementById('imageModal').classList.add('hidden');
             resetZoom();
+        }
+
+        // จัดการสถานะปุ่มดาวน์โหลด/แชร์
+        function setActionButtons(state) {
+            const dBtn = document.getElementById('downloadBtn');
+            const sBtn = document.getElementById('shareBtn');
+            const status = document.getElementById('downloadStatus');
+            if (state === 'ready') {
+                dBtn.disabled = false; sBtn.disabled = false;
+                dBtn.textContent = '⬇️ ดาวน์โหลด';
+                sBtn.textContent = '📤 แชร์';
+                status.innerHTML = '';
+            } else if (state === 'loading') {
+                dBtn.disabled = true; sBtn.disabled = true;
+                dBtn.textContent = '⏳ กำลังโหลด...';
+                sBtn.textContent = '⏳ กำลังโหลด...';
+                status.innerHTML = '';
+            } else if (state === 'error') {
+                dBtn.disabled = true; sBtn.disabled = true;
+                dBtn.textContent = '⬇️ ดาวน์โหลด';
+                sBtn.textContent = '📤 แชร์';
+                status.innerHTML = '❌ โหลดรูปไม่สำเร็จ — ปิดแล้วเปิดรูปใหม่';
+            }
         }
 
         // โหลดรูปเต็มจาก Drive ไว้ล่วงหน้า
@@ -564,10 +656,14 @@
                     preloadedBlob = base64ToBlob(json.base64, json.mimeType);
                     preloadedMime = json.mimeType;
                     preloadedName = json.name;
+                    setActionButtons('ready');
+                } else {
+                    setActionButtons('error');
                 }
                 return json;
             } catch (e) {
                 console.error('preload error:', e);
+                setActionButtons('error');
                 return { success: false, error: e.message };
             }
         }
@@ -666,19 +762,6 @@
         }
 
         // เตรียม blob รูป (รอ preload ถ้ายังไม่เสร็จ)
-        async function ensureBlob(status) {
-            if (!preloadedBlob) {
-                if (status) status.innerHTML = '<div class="spinner"></div> กำลังเตรียมไฟล์...';
-                if (preloadPromise) await preloadPromise;
-            }
-            if (!preloadedBlob) throw new Error('โหลดรูปไม่สำเร็จ ลองใหม่อีกครั้ง');
-            return {
-                blob: preloadedBlob,
-                mime: preloadedMime || 'image/jpeg',
-                fileName: preloadedName || currentFileName || 'image.jpg'
-            };
-        }
-
         // ตรวจระบบปฏิบัติการ
         function detectOS() {
             const ua = navigator.userAgent;
@@ -688,111 +771,96 @@
             return { isIOS, isAndroid, isMobile: isIOS || isAndroid };
         }
 
-        // ===== ปุ่มดาวน์โหลด → บันทึกไฟล์ลงเครื่อง (เลือกวิธีตามเครื่อง) =====
-        async function downloadImage() {
-            if (!currentFileId) { alert('⚠️ ไม่พบไฟล์'); return; }
-            const status = document.getElementById('downloadStatus');
-            const btn = document.getElementById('downloadBtn');
-            btn.disabled = true;
-
-            try {
-                const { blob, mime, fileName } = await ensureBlob(status);
-                const file = new File([blob], fileName, { type: mime });
-                const { isIOS } = detectOS();
-
-                // ── 1. Desktop Chrome/Edge → เลือกที่เก็บไฟล์ได้ ──
-                if (window.showSaveFilePicker) {
-                    try {
-                        const ext = fileName.includes('.') ? fileName.split('.').pop() : 'jpg';
-                        const handle = await window.showSaveFilePicker({
-                            suggestedName: fileName,
-                            types: [{ description: 'รูปภาพ', accept: { [mime]: ['.' + ext] } }]
-                        });
-                        const writable = await handle.createWritable();
-                        await writable.write(blob);
-                        await writable.close();
-                        status.innerHTML = '✅ บันทึกสำเร็จ!';
-                        btn.disabled = false;
-                        return;
-                    } catch (e) {
-                        if (e.name === 'AbortError') { status.innerHTML = ''; btn.disabled = false; return; }
-                    }
-                }
-
-                // ── 2. iOS → ใช้ Web Share (a.download ใช้ไม่ได้บน iOS) → "บันทึกรูปภาพ" ──
-                if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({ files: [file], title: fileName });
-                        status.innerHTML = '✅ บันทึกลงรูปภาพแล้ว!';
-                        btn.disabled = false;
-                        return;
-                    } catch (e) {
-                        if (e.name === 'AbortError') { status.innerHTML = ''; btn.disabled = false; return; }
-                    }
-                }
-
-                // ── 3. Android/เบราว์เซอร์อื่น → ดาวน์โหลดลงเครื่องตรงๆ ──
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = fileName;
-                link.rel = 'noopener';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                setTimeout(() => URL.revokeObjectURL(link.href), 3000);
-                status.innerHTML = '✅ ดาวน์โหลดแล้ว! (ดูในโฟลเดอร์ดาวน์โหลด หรือแอปรูปภาพ)';
-
-                // ── 4. Fallback → ถ้าดาวน์โหลดไม่ได้ผล ให้ลองแชร์ ──
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    setTimeout(() => {
-                        if (status.innerHTML.includes('ดาวน์โหลดแล้ว')) {
-                            status.innerHTML += ' • ถ้าไม่พบไฟล์ ลองปุ่ม 📤 แชร์';
-                        }
-                    }, 500);
-                }
-            } catch (err) {
-                status.innerHTML = '❌ ' + err.message;
-            }
-            btn.disabled = false;
+        // เตรียม File จาก blob ที่ preload ไว้แล้ว (ปุ่มกดได้เฉพาะตอนพร้อม)
+        function getReadyFile() {
+            const mime = preloadedMime || 'image/jpeg';
+            const fileName = preloadedName || currentFileName || 'image.jpg';
+            return {
+                blob: preloadedBlob,
+                mime: mime,
+                fileName: fileName,
+                file: new File([preloadedBlob], fileName, { type: mime })
+            };
         }
 
-        // ===== ปุ่มแชร์ → เมนูแชร์ (บันทึกลงรูปภาพ / ส่งต่อ) =====
-        async function shareImage() {
-            if (!currentFileId) { alert('⚠️ ไม่พบไฟล์'); return; }
+        // ===== ปุ่มดาวน์โหลด → บันทึกไฟล์ลงเครื่อง (เลือกวิธีตามเครื่อง) =====
+        async function downloadImage() {
+            if (!preloadedBlob) { alert('⏳ รูปกำลังโหลด รอสักครู่'); return; }
             const status = document.getElementById('downloadStatus');
-            const btn = document.getElementById('shareBtn');
-            btn.disabled = true;
+            const { blob, mime, fileName, file } = getReadyFile();
+            const { isIOS } = detectOS();
 
-            try {
-                const { blob, mime, fileName } = await ensureBlob(status);
-                const file = new File([blob], fileName, { type: mime });
-
-                // Web Share API → เมนูแชร์ของเครื่อง (บันทึกรูปภาพ/ส่งต่อ)
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({ files: [file], title: fileName });
-                        status.innerHTML = '✅ แชร์สำเร็จ!';
-                        btn.disabled = false;
-                        return;
-                    } catch (e) {
-                        if (e.name === 'AbortError') { status.innerHTML = ''; btn.disabled = false; return; }
-                        throw e;
-                    }
+            // ── iOS → Web Share ทันที (a.download ใช้ไม่ได้บน iOS) ──
+            // เรียก share ก่อน await ใดๆ เพื่อรักษา user gesture
+            if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({ files: [file], title: fileName });
+                    status.innerHTML = '✅ บันทึกลงรูปภาพแล้ว!';
+                    return;
+                } catch (e) {
+                    if (e.name === 'AbortError') { status.innerHTML = ''; return; }
                 }
-
-                // ถ้าไม่รองรับแชร์ → ดาวน์โหลดแทน
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = fileName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                setTimeout(() => URL.revokeObjectURL(link.href), 3000);
-                status.innerHTML = '⚠️ เครื่องนี้ไม่รองรับแชร์ — ดาวน์โหลดลงเครื่องแทนแล้ว';
-            } catch (err) {
-                status.innerHTML = '❌ ' + err.message;
             }
-            btn.disabled = false;
+
+            // ── Desktop Chrome/Edge → เลือกที่เก็บไฟล์ได้ ──
+            if (window.showSaveFilePicker) {
+                try {
+                    const ext = fileName.includes('.') ? fileName.split('.').pop() : 'jpg';
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{ description: 'รูปภาพ', accept: { [mime]: ['.' + ext] } }]
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+                    status.innerHTML = '✅ บันทึกสำเร็จ!';
+                    return;
+                } catch (e) {
+                    if (e.name === 'AbortError') { status.innerHTML = ''; return; }
+                }
+            }
+
+            // ── Android/เบราว์เซอร์อื่น → ดาวน์โหลดลงเครื่องตรงๆ ──
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.rel = 'noopener';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(link.href), 3000);
+            status.innerHTML = '✅ ดาวน์โหลดแล้ว! (ดูในโฟลเดอร์ดาวน์โหลด หรือแอปรูปภาพ)';
+        }
+
+        // ===== ปุ่มแชร์ → เมนูแชร์ (เลือกแอป / บันทึกลงรูปภาพ) =====
+        async function shareImage() {
+            if (!preloadedBlob) { alert('⏳ รูปกำลังโหลด รอสักครู่'); return; }
+            const status = document.getElementById('downloadStatus');
+            const { blob, fileName, file } = getReadyFile();
+
+            // เรียก navigator.share ทันที (ไม่ await ก่อน) → รักษา user gesture
+            // → เมนูแชร์ขึ้นและเลือกแอปได้ปกติ
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({ files: [file], title: fileName });
+                    status.innerHTML = '✅ แชร์สำเร็จ!';
+                    return;
+                } catch (e) {
+                    if (e.name === 'AbortError') { status.innerHTML = ''; return; }
+                    status.innerHTML = '❌ แชร์ไม่สำเร็จ: ' + e.message;
+                    return;
+                }
+            }
+
+            // ถ้าไม่รองรับแชร์ → ดาวน์โหลดแทน
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(link.href), 3000);
+            status.innerHTML = '⚠️ เครื่องนี้ไม่รองรับแชร์ — ดาวน์โหลดแทนแล้ว';
         }
     </script>
 </body>
