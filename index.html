@@ -36,7 +36,6 @@
             color: #e8e8e8;
         }
 
-        /* ============ GLASS & CARD EFFECTS ============ */
         .glass-effect {
             backdrop-filter: blur(10px);
             border: 2px solid rgba(255, 255, 255, 0.4);
@@ -94,16 +93,6 @@
 
         .image-card:hover {
             transform: translateY(-12px) scale(1.02);
-        }
-
-        .theme-pastel .image-card:hover {
-            box-shadow: 0 16px 35px rgba(236, 72, 153, 0.25);
-            border-color: rgba(236, 72, 153, 0.3);
-        }
-
-        .theme-dark .image-card:hover {
-            box-shadow: 0 16px 35px rgba(255, 27, 53, 0.4);
-            border-color: rgba(255, 27, 53, 0.5);
         }
 
         .image-card img {
@@ -210,14 +199,6 @@
 
         .card:hover {
             transform: translateY(-5px);
-        }
-
-        .theme-pastel .card:hover {
-            box-shadow: 0 16px 40px rgba(236, 72, 153, 0.2);
-        }
-
-        .theme-dark .card:hover {
-            box-shadow: 0 16px 40px rgba(255, 27, 53, 0.3);
         }
 
         .btn-primary {
@@ -329,44 +310,39 @@
             transform: scale(1.05);
         }
 
-        .pastel-pink {
-            background: linear-gradient(135deg, #fce7f3, #fbcfe8) !important;
+        .subfolder-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        .pastel-blue {
-            background: linear-gradient(135deg, #dbeafe, #bae6fd) !important;
+        .theme-pastel .subfolder-item {
+            background: rgba(244, 114, 182, 0.1);
+            border: 2px solid rgba(244, 114, 182, 0.2);
         }
 
-        .pastel-yellow {
-            background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
+        .theme-dark .subfolder-item {
+            background: rgba(255, 27, 53, 0.1);
+            border: 2px solid rgba(255, 27, 53, 0.2);
         }
 
-        .pastel-green {
-            background: linear-gradient(135deg, #dcfce7, #bbf7d0) !important;
+        .subfolder-item:hover {
+            transform: translateX(10px);
         }
 
-        .pastel-purple {
-            background: linear-gradient(135deg, #f3e8ff, #e9d5ff) !important;
+        .theme-pastel .subfolder-item:hover {
+            background: rgba(244, 114, 182, 0.2);
+            border-color: rgba(244, 114, 182, 0.4);
         }
 
-        .theme-dark .dark-card-pink {
-            background: linear-gradient(135deg, #2a1a24, #3a2a34) !important;
-        }
-
-        .theme-dark .dark-card-blue {
-            background: linear-gradient(135deg, #1a2a3a, #2a3a4a) !important;
-        }
-
-        .theme-dark .dark-card-yellow {
-            background: linear-gradient(135deg, #3a3a1a, #4a4a2a) !important;
-        }
-
-        .theme-dark .dark-card-green {
-            background: linear-gradient(135deg, #1a3a2a, #2a4a3a) !important;
-        }
-
-        .theme-dark .dark-card-purple {
-            background: linear-gradient(135deg, #2a1a3a, #3a2a4a) !important;
+        .theme-dark .subfolder-item:hover {
+            background: rgba(255, 27, 53, 0.2);
+            border-color: rgba(255, 27, 53, 0.4);
         }
     </style>
 </head>
@@ -469,8 +445,10 @@
         let imageSize = 300;
         let selectedImage = null;
         let selectedFolder = null;
+        let selectedSubfolder = null;
         let selectedFiles = [];
         let currentTheme = localStorage.getItem('theme') || 'pastel';
+        let subfolders = {};
 
         const activities = [
             {
@@ -528,14 +506,10 @@
 
         function renderGallery() {
             let html = '';
-            const colorClasses = ['pastel-pink', 'pastel-purple', 'pastel-blue'];
-            const darkColorClasses = ['dark-card-pink', 'dark-card-yellow', 'dark-card-green'];
-            
             activities.forEach((activity, idx) => {
-                const colorClass = currentTheme === 'pastel' ? colorClasses[idx] : darkColorClasses[idx];
                 html += `
                     <div class="mb-16">
-                        <div class="card ${colorClass}">
+                        <div class="card">
                             <div class="flex items-center gap-4">
                                 <span class="text-6xl">${activity.emoji}</span>
                                 <div>
@@ -565,37 +539,58 @@
         }
 
         function renderAdmin() {
-            const cardColorClass = currentTheme === 'pastel' 
-                ? 'pastel-pink pastel-blue pastel-yellow pastel-green pastel-purple'
-                : 'dark-card-pink dark-card-blue dark-card-yellow dark-card-green dark-card-purple';
-
             const html = `
                 <div class="space-y-8">
-                    <!-- เลือกโฟลเดอร์ -->
-                    <div class="card" style="background: ${currentTheme === 'pastel' ? 'linear-gradient(135deg, #fce7f3, #fbcfe8)' : 'linear-gradient(135deg, #2a1a24, #3a2a34)'};">
+                    <!-- เลือกโฟลเดอร์หลัก -->
+                    <div class="card">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="text-4xl">📁</span>
-                            <h2 class="text-3xl font-bold gradient-text">เลือกโฟลเดอร์อัพโหลด</h2>
+                            <h2 class="text-3xl font-bold gradient-text">1️⃣ เลือกโฟลเดอร์กิจกรรม</h2>
                         </div>
-                        <select id="folderSelect" onchange="onFolderSelected()" class="w-full px-4 py-3 border-2 rounded-xl focus:outline-none text-lg" style="background: ${currentTheme === 'pastel' ? '#fff' : '#1a1a1a'}; color: ${currentTheme === 'pastel' ? '#000' : '#e8e8e8'}; border-color: ${currentTheme === 'pastel' ? '#fbbf24' : '#ff1b35'};">
+                        <select id="folderSelect" onchange="onFolderSelected()" class="w-full px-4 py-3 border-2 rounded-xl focus:outline-none text-lg" style="background: ${currentTheme === 'pastel' ? '#fff' : '#1a1a1a'}; color: ${currentTheme === 'pastel' ? '#000' : '#e8e8e8'}; border-color: ${currentTheme === 'pastel' ? '#ec4899' : '#ff1b35'};">
                             <option value="">-- เลือกโฟลเดอร์ --</option>
                             <option value='{"name":"กิจกรรมวันสดใส","id":"folder1"}'>📁 กิจกรรมวันสดใส</option>
                             <option value='{"name":"กิจกรรมสร้างสรรค์","id":"folder2"}'>📁 กิจกรรมสร้างสรรค์</option>
                             <option value='{"name":"กิจกรรมแข่งขัน","id":"folder3"}'>📁 กิจกรรมแข่งขัน</option>
                         </select>
-                        <div id="selectedFolderInfo" class="hidden mt-4 p-4 rounded-xl" style="background: ${currentTheme === 'pastel' ? 'linear-gradient(135deg, #dbeafe, #bae6fd)' : 'linear-gradient(135deg, #1a2a3a, #2a3a4a)'};">
+                        <div id="selectedFolderInfo" class="hidden mt-4 p-4 rounded-xl">
                             <p class="font-semibold">✓ โฟลเดอร์: <span id="folderNameDisplay" class="font-bold" style="color: ${currentTheme === 'pastel' ? '#ec4899' : '#ff1b35'};"></span></p>
                         </div>
                     </div>
 
-                    <!-- อัพโหลดรูป -->
-                    <div class="card" style="background: ${currentTheme === 'pastel' ? 'linear-gradient(135deg, #fef3c7, #fde68a)' : 'linear-gradient(135deg, #3a3a1a, #4a4a2a)'};">
+                    <!-- สร้างโฟลเดอร์ย่อย -->
+                    <div id="createSubfolderSection" class="card hidden">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="text-4xl">📂</span>
+                            <h2 class="text-3xl font-bold gradient-text">2️⃣ สร้างโฟลเดอร์ย่อย</h2>
+                        </div>
+                        <div class="flex gap-2 mb-4">
+                            <input type="text" id="subfolderName" placeholder="ชื่อกิจกรรมประเภท (เช่น: ชาย, หญิง, ทั่วไป)" class="flex-1 px-4 py-2 border-2 rounded-xl focus:outline-none" style="background: ${currentTheme === 'pastel' ? '#fff' : '#1a1a1a'}; color: ${currentTheme === 'pastel' ? '#000' : '#e8e8e8'}; border-color: ${currentTheme === 'pastel' ? '#ec4899' : '#ff1b35'};">
+                            <button onclick="createSubfolder()" class="btn-primary px-6">
+                                ➕ สร้าง
+                            </button>
+                        </div>
+                        <div id="subfolderList"></div>
+                    </div>
+
+                    <!-- เลือกโฟลเดอร์ย่อยและอัพโหลด -->
+                    <div id="uploadSection" class="card hidden">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="text-4xl">📸</span>
-                            <h2 class="text-3xl font-bold gradient-text">อัพโหลดรูปภาพ</h2>
+                            <h2 class="text-3xl font-bold gradient-text">3️⃣ อัพโหลดรูปภาพ</h2>
                         </div>
-                        <div id="uploadSection" class="hidden space-y-4">
-                            <div class="border-4 border-dashed rounded-2xl p-12 text-center transition cursor-pointer" style="border-color: ${currentTheme === 'pastel' ? '#fbbf24' : '#ff4757'}; background-color: ${currentTheme === 'pastel' ? '#fffbeb' : '#2a2a1a'};"
+
+                        <!-- เลือกโฟลเดอร์ย่อย -->
+                        <div class="mb-6">
+                            <label class="block text-lg font-bold mb-2">เลือกโฟลเดอร์ย่อยสำหรับอัพโหลด</label>
+                            <select id="subfolderSelect" onchange="onSubfolderSelected()" class="w-full px-4 py-3 border-2 rounded-xl focus:outline-none text-lg" style="background: ${currentTheme === 'pastel' ? '#fff' : '#1a1a1a'}; color: ${currentTheme === 'pastel' ? '#000' : '#e8e8e8'}; border-color: ${currentTheme === 'pastel' ? '#ec4899' : '#ff1b35'};">
+                                <option value="">-- เลือกโฟลเดอร์ย่อย --</option>
+                            </select>
+                        </div>
+
+                        <!-- ฟอร์มอัพโหลด -->
+                        <div id="uploadFormSection" class="hidden space-y-4">
+                            <div class="border-4 border-dashed rounded-2xl p-12 text-center transition cursor-pointer" style="border-color: ${currentTheme === 'pastel' ? '#ec4899' : '#ff1b35'}; background-color: ${currentTheme === 'pastel' ? '#fef3c7' : '#2a1a1a'};"
                                  onclick="document.getElementById('imageInput').click()"
                                  ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
                                 <p class="text-6xl mb-3">📤</p>
@@ -605,7 +600,7 @@
                             </div>
 
                             <div id="selectedImages" class="hidden">
-                                <p class="font-bold mb-3">📋 รูปที่เลือก: <span id="imageCount" style="color: ${currentTheme === 'pastel' ? '#ec4899' : '#ff1b35'};">0</span> รูป</p>
+                                <p class="font-bold mb-3">📋 รูปที่เลือก: <span id="imageCount" style="color: ${currentTheme === 'pastel' ? '#ec4899' : '#ff1b35'};"></span> รูป</p>
                                 <div id="imagePreview" class="grid grid-cols-2 md:grid-cols-4 gap-4 max-h-80 overflow-y-auto"></div>
                                 <div class="flex gap-2 mt-4">
                                     <button onclick="uploadImages()" class="flex-1 btn-primary text-lg py-4">
@@ -619,13 +614,13 @@
                             <div id="uploadStatus" class="hidden p-4 rounded-xl text-center font-bold"></div>
                         </div>
 
-                        <div id="noFolderMessage" class="p-6 rounded-xl text-center" style="background: ${currentTheme === 'pastel' ? 'linear-gradient(135deg, #fed7aa, #fdba74)' : 'linear-gradient(135deg, #4a3a2a, #6a5a4a)'};">
-                            <p class="text-xl font-bold">⚠️ กรุณาเลือกโฟลเดอร์ก่อนอัพโหลดรูป</p>
+                        <div id="noSubfolderMessage" class="p-6 rounded-xl text-center" style="background: ${currentTheme === 'pastel' ? '#fed7aa' : '#4a3a2a'};">
+                            <p class="text-xl font-bold">⚠️ กรุณาสร้างโฟลเดอร์ย่อยและเลือกก่อนอัพโหลดรูป</p>
                         </div>
                     </div>
 
                     <!-- ปรับขนาดรูป -->
-                    <div class="card" style="background: ${currentTheme === 'pastel' ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' : 'linear-gradient(135deg, #1a3a2a, #2a4a3a)'};">
+                    <div class="card">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="text-4xl">⚙️</span>
                             <h2 class="text-3xl font-bold gradient-text">จัดการขนาดรูป</h2>
@@ -633,31 +628,31 @@
                         <label class="block text-lg font-bold mb-4">
                             ขนาดรูป: <span id="sizeDisplay" class="gradient-text text-2xl">300</span>px
                         </label>
-                        <input type="range" min="150" max="500" value="300" onchange="changeImageSize(this.value)" class="w-full h-4 rounded-lg" style="background: ${currentTheme === 'pastel' ? 'linear-gradient(to right, #86efac, #60a5fa)' : 'linear-gradient(to right, #ff4757, #ffa502)'};;">
+                        <input type="range" min="150" max="500" value="300" onchange="changeImageSize(this.value)" class="w-full h-4 rounded-lg">
                     </div>
 
                     <!-- ลิ้งค์จัดการข้อมูล -->
-                    <div class="card" style="background: ${currentTheme === 'pastel' ? 'linear-gradient(135deg, #f3e8ff, #e9d5ff)' : 'linear-gradient(135deg, #2a1a3a, #3a2a4a)'};">
+                    <div class="card">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="text-4xl">🔗</span>
                             <h2 class="text-3xl font-bold gradient-text">ลิ้งค์จัดการข้อมูล</h2>
                         </div>
                         <div class="space-y-3">
-                            <a href="https://docs.google.com/spreadsheets/d/1awRAkSlzYyu2aBnr4cof0JX7fxNoDcoGOeOlfIoSTbU/" target="_blank" class="block p-4 rounded-xl transition transform hover:scale-105" style="background: ${currentTheme === 'pastel' ? 'linear-gradient(135deg, #dbeafe, #bae6fd)' : 'linear-gradient(135deg, #1a2a3a, #2a3a4a)'};">
+                            <a href="https://docs.google.com/spreadsheets/d/1awRAkSlzYyu2aBnr4cof0JX7fxNoDcoGOeOlfIoSTbU/" target="_blank" class="block p-4 rounded-xl transition transform hover:scale-105" style="background: ${currentTheme === 'pastel' ? 'rgba(200,150,255,0.2)' : 'rgba(100,50,100,0.3)'};">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <p class="font-bold text-lg">📊 Google Sheets</p>
-                                        <p class="text-sm">จัดการข้อมูลกิจกรรม & Folder ID</p>
+                                        <p class="text-sm">จัดการข้อมูลกิจกรรม</p>
                                     </div>
                                     <span class="text-3xl">→</span>
                                 </div>
                             </a>
 
-                            <a href="https://drive.google.com/drive/folders/1Ymln5xGCN2GjplQujJIcmHbOwFLAlMaI" target="_blank" class="block p-4 rounded-xl transition transform hover:scale-105" style="background: ${currentTheme === 'pastel' ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' : 'linear-gradient(135deg, #1a3a2a, #2a4a3a)'};">
+                            <a href="https://drive.google.com/drive/folders/1Ymln5xGCN2GjplQujJIcmHbOwFLAlMaI" target="_blank" class="block p-4 rounded-xl transition transform hover:scale-105" style="background: ${currentTheme === 'pastel' ? 'rgba(100,200,100,0.2)' : 'rgba(50,100,50,0.3)'};">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <p class="font-bold text-lg">📁 Google Drive</p>
-                                        <p class="text-sm">อัพโหลดรูป & จัดการโฟลเดอร์</p>
+                                        <p class="text-sm">ดูโฟลเดอร์และรูป</p>
                                     </div>
                                     <span class="text-3xl">→</span>
                                 </div>
@@ -686,15 +681,93 @@
             if (!select.value) {
                 selectedFolder = null;
                 document.getElementById('selectedFolderInfo').classList.add('hidden');
+                document.getElementById('createSubfolderSection').classList.add('hidden');
                 document.getElementById('uploadSection').classList.add('hidden');
-                document.getElementById('noFolderMessage').classList.remove('hidden');
                 return;
             }
             selectedFolder = JSON.parse(select.value);
             document.getElementById('folderNameDisplay').textContent = selectedFolder.name;
             document.getElementById('selectedFolderInfo').classList.remove('hidden');
+            document.getElementById('createSubfolderSection').classList.remove('hidden');
+            
+            // Reset subfolders สำหรับโฟลเดอร์นี้
+            if (!subfolders[selectedFolder.id]) {
+                subfolders[selectedFolder.id] = [];
+            }
+            updateSubfolderList();
+        }
+
+        function createSubfolder() {
+            const input = document.getElementById('subfolderName');
+            const name = input.value.trim();
+            
+            if (!name) {
+                alert('⚠️ กรุณาใส่ชื่อโฟลเดอร์ย่อย');
+                return;
+            }
+
+            if (!selectedFolder) {
+                alert('⚠️ กรุณาเลือกโฟลเดอร์หลักก่อน');
+                return;
+            }
+
+            const subfolder = {
+                id: Date.now(),
+                name: name
+            };
+
+            subfolders[selectedFolder.id].push(subfolder);
+            input.value = '';
+            updateSubfolderList();
             document.getElementById('uploadSection').classList.remove('hidden');
-            document.getElementById('noFolderMessage').classList.add('hidden');
+        }
+
+        function updateSubfolderList() {
+            const listDiv = document.getElementById('subfolderList');
+            const selectDiv = document.getElementById('subfolderSelect');
+            
+            if (!subfolders[selectedFolder.id]) {
+                listDiv.innerHTML = '<p class="text-gray-500">ยังไม่มีโฟลเดอร์ย่อย</p>';
+                selectDiv.innerHTML = '<option value="">-- เลือกโฟลเดอร์ย่อย --</option>';
+                return;
+            }
+
+            const folders = subfolders[selectedFolder.id];
+            let html = '';
+            selectDiv.innerHTML = '<option value="">-- เลือกโฟลเดอร์ย่อย --</option>';
+
+            folders.forEach(folder => {
+                html += `
+                    <div class="subfolder-item">
+                        <span>📂 ${folder.name}</span>
+                        <button onclick="deleteSubfolder(${folder.id})" class="text-red-500 hover:text-red-700">✕</button>
+                    </div>
+                `;
+                selectDiv.innerHTML += `<option value='${JSON.stringify(folder)}'>📂 ${folder.name}</option>`;
+            });
+
+            listDiv.innerHTML = html || '<p class="text-gray-500">ยังไม่มีโฟลเดอร์ย่อย</p>';
+        }
+
+        function deleteSubfolder(folderId) {
+            subfolders[selectedFolder.id] = subfolders[selectedFolder.id].filter(f => f.id !== folderId);
+            updateSubfolderList();
+            selectedSubfolder = null;
+            document.getElementById('uploadFormSection').classList.add('hidden');
+            document.getElementById('noSubfolderMessage').classList.remove('hidden');
+        }
+
+        function onSubfolderSelected() {
+            const select = document.getElementById('subfolderSelect');
+            if (!select.value) {
+                selectedSubfolder = null;
+                document.getElementById('uploadFormSection').classList.add('hidden');
+                document.getElementById('noSubfolderMessage').classList.remove('hidden');
+                return;
+            }
+            selectedSubfolder = JSON.parse(select.value);
+            document.getElementById('uploadFormSection').classList.remove('hidden');
+            document.getElementById('noSubfolderMessage').classList.add('hidden');
         }
 
         function handleDragOver(e) {
@@ -751,16 +824,16 @@
         }
 
         function uploadImages() {
-            if (!selectedFolder || selectedFiles.length === 0) {
-                alert('⚠️ กรุณาเลือกโฟลเดอร์และรูป');
+            if (!selectedSubfolder || selectedFiles.length === 0) {
+                alert('⚠️ กรุณาเลือกโฟลเดอร์ย่อยและรูป');
                 return;
             }
             const status = document.getElementById('uploadStatus');
             status.className = 'p-4 rounded-xl text-center font-bold';
-            status.innerHTML = '⏳ กำลังอัพโหลด ' + selectedFiles.length + ' รูป...';
+            status.innerHTML = '⏳ กำลังอัพโหลด ' + selectedFiles.length + ' รูป ไปโฟลเดอร์ "' + selectedSubfolder.name + '"...';
             status.classList.remove('hidden');
             setTimeout(() => {
-                status.innerHTML = `✅ อัพโหลดสำเร็จ! (${selectedFiles.length} รูป)`;
+                status.innerHTML = `✅ อัพโหลดสำเร็จ! (${selectedFiles.length} รูป ใน "${selectedSubfolder.name}")`;
                 clearImages();
             }, 1500);
         }
