@@ -126,6 +126,39 @@
             50% { transform: translateY(-15px); }
         }
 
+        .icon-bright {
+            display: inline-block;
+            font-size: 2.5rem;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .icon-creative {
+            display: inline-block;
+            font-size: 2.5rem;
+            animation: spin 3s linear infinite;
+        }
+
+        .icon-competition {
+            display: inline-block;
+            font-size: 2.5rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.1); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
         .upload-area {
             border: 3px dashed rgba(236, 72, 153, 0.5);
             border-radius: 15px;
@@ -265,15 +298,15 @@
     <script>
         const ADMIN_PASSWORD = '434143';
         let isAdmin = false;
-        let currentFolder = 'event';
+        let currentFolder = 'bright';
         let selectedFiles = [];
         let currentTheme = localStorage.getItem('theme') || 'pastel';
         
         // 3 โฟลเดอร์หลัก
         let galleries = JSON.parse(localStorage.getItem('galleries')) || {
-            'event': { name: '🎪 กิจกรรมวิ่งสุดโล', icon: '🎪', images: [] },
-            'art': { name: '🎨 กิจกรรมสร้างศรรค', icon: '🎨', images: [] },
-            'sports': { name: '👟 กิจกรรมแข่งวิ่ง', icon: '👟', images: [] }
+            'bright': { name: '🎉 กิจกรรมวันสดใส', desc: 'กิจกรรมสนุกสำหรับวัยหนุ่มสาว เพื่อสร้างความสนิทและเสริมสร้างจิตสำนึก', icon: '🎉', images: [] },
+            'creative': { name: '🎨 กิจกรรมสร้างสรรค์', desc: 'พัฒนาทักษะและความสามารถโดยสร้างผลงานจากจินตนาการ', icon: '🎨', images: [] },
+            'competition': { name: '🏆 กิจกรรมแข่งขัน', desc: 'การแข่งขันอันสร้างสรรค์เพื่อค้นหาความแข็งแกร่ง', icon: '🏆', images: [] }
         };
 
         window.onload = () => {
@@ -315,12 +348,14 @@
 
         function updateFoldersList() {
             const list = document.getElementById('foldersList');
-            list.innerHTML = Object.entries(galleries).map(([id, folder]) => `
+            list.innerHTML = Object.entries(galleries).map(([id, folder]) => {
+                let iconClass = id === 'bright' ? 'icon-bright' : id === 'creative' ? 'icon-creative' : 'icon-competition';
+                return `
                 <div class="folder-btn ${id === currentFolder ? 'active' : ''}" onclick="selectFolder('${id}')">
-                    ${folder.icon} ${folder.name}
-                    <span class="ml-2 text-xs">(${folder.images.length})</span>
+                    <span class="${iconClass}">${folder.icon}</span> ${folder.name}
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function selectFolder(id) {
@@ -417,16 +452,17 @@
             let html = '';
 
             Object.entries(galleries).forEach(([id, folder]) => {
-                if (folder.images && folder.images.length > 0) {
-                    html += `
-                        <div class="mb-16">
-                            <div class="card mb-8">
-                                <h2 class="text-3xl font-bold gradient-text">${folder.icon} ${folder.name}</h2>
-                                <p class="text-gray-600 mt-2">${folder.images.length} รูป</p>
-                            </div>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    `;
+                let iconClass = id === 'bright' ? 'icon-bright' : id === 'creative' ? 'icon-creative' : 'icon-competition';
+                html += `
+                    <div class="mb-16">
+                        <div class="card mb-8">
+                            <h2 class="text-3xl font-bold gradient-text"><span class="${iconClass}">${folder.icon}</span> ${folder.name}</h2>
+                            <p class="text-gray-600 mt-2">${folder.images.length} รูป</p>
+                        </div>
+                `;
 
+                if (folder.images && folder.images.length > 0) {
+                    html += `<div class="grid grid-cols-2 md:grid-cols-4 gap-4">`;
                     folder.images.forEach(img => {
                         html += `
                             <div class="image-card" onclick="openModal('${img.src}', '${img.name}')">
@@ -434,20 +470,13 @@
                             </div>
                         `;
                     });
-
-                    html += `</div></div>`;
+                    html += `</div>`;
+                } else {
+                    html += `<div class="card text-center py-12 opacity-60"><p class="text-gray-500">📸 ยังไม่มีรูปภาพ</p></div>`;
                 }
-            });
 
-            if (html === '') {
-                html = `
-                    <div class="card text-center">
-                        <h2 class="text-2xl font-bold gradient-text mb-4">📸 แกลเลอรีกิจกรรม</h2>
-                        <p class="mb-4">👤 ยังไม่มีรูปภาพ</p>
-                        <p class="text-sm text-gray-500">เข้า Admin เพื่ออัพโหลดรูป</p>
-                    </div>
-                `;
-            }
+                html += `</div>`;
+            });
 
             document.getElementById('galleryView').innerHTML = html;
         }
