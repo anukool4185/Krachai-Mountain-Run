@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📸 แกลเรี่ย่กิจกรรม</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .sticky-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 40;
+        }
+
+        .main-content {
+            padding-bottom: 80px;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                padding-bottom: 32px;
+            }
+        }
+
+        .image-grid {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .image-card {
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .image-card:hover {
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            transform: scale(1.05);
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+            color: white;
+            opacity: 0;
+        }
+
+        .image-card:hover .image-overlay {
+            background: rgba(0,0,0,0.4);
+            opacity: 1;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 16px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: auto;
+            position: relative;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 767px) {
+            .hidden-mobile {
+                display: none !important;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .hidden-desktop {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-blue-50 to-white">
+    <div id="app">
+        <!-- Loading Screen -->
+        <div id="loading" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+            <div class="text-center">
+                <div class="inline-block p-4 mb-4">
+                    <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full spin"></div>
+                </div>
+                <p class="text-gray-600">กำลังโหลดข้อมูล...</p>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="sticky top-0 z-40 bg-white shadow-md">
+            <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-blue-600">📸 แกลเรี่ย่กิจกรรม</h1>
+                    <p class="text-sm text-gray-600">ชมรูปภาพและเรื่องราวจากกิจกรรมต่างๆ</p>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <nav class="hidden-mobile flex gap-4">
+                    <button onclick="setCurrentPage('gallery')" id="btnGallery" class="px-4 py-2 rounded-lg font-medium transition bg-blue-600 text-white">
+                        🖼️ แกลเรี่ย
+                    </button>
+                    <button id="btnAdmin" onclick="setCurrentPage('admin')" class="px-4 py-2 rounded-lg font-medium transition bg-gray-200 text-gray-800 hover:bg-gray-300 hidden">
+                        ⚙️ จัดการ
+                    </button>
+                    <button onclick="toggleAdmin()" class="px-4 py-2 rounded-lg font-medium bg-yellow-200 text-yellow-800 hover:bg-yellow-300 transition">
+                        🔐 Admin
+                    </button>
+                </nav>
+
+                <!-- Mobile Menu Button -->
+                <button onclick="toggleMobileMenu()" class="hidden-desktop p-2 hover:bg-gray-200 rounded-lg">
+                    <span class="text-2xl">☰</span>
+                </button>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="hidden-desktop bg-white border-t border-gray-200 px-4 py-3 flex flex-col gap-2 hidden">
+                <button onclick="setCurrentPage('gallery'); toggleMobileMenu()" class="w-full text-left px-4 py-2 rounded hover:bg-gray-100">
+                    🖼️ แกลเรี่ย
+                </button>
+                <button id="btnMobileAdmin" onclick="setCurrentPage('admin'); toggleMobileMenu()" class="w-full text-left px-4 py-2 rounded hover:bg-gray-100 hidden">
+                    ⚙️ จัดการ
+                </button>
+                <button onclick="toggleAdmin()" class="w-full text-left px-4 py-2 rounded hover:bg-gray-100 font-medium text-yellow-600">
+                    🔐 Admin
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 max-w-6xl mx-auto w-full px-4 py-8 main-content">
+            <div id="galleryContent"></div>
+            <div id="adminContent" class="hidden"></div>
+        </main>
+
+        <!-- Image Popup -->
+        <div id="imageModal" class="modal-overlay hidden" onclick="closeModal(event)">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <button onclick="closeModal()" style="position: absolute; top: 12px; right: 12px; z-index: 10; background: white; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center;">✕</button>
+                <img id="modalImage" src="" alt="" class="modal-image p-4">
+                <div class="flex gap-3 p-4">
+                    <button onclick="downloadImage()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium">
+                        ⬇️ บันทึกรูป
+                    </button>
+                    <button onclick="closeModal()" class="flex-1 bg-gray-300 text-gray-800 py-2 rounded-lg hover:bg-gray-400 transition font-medium">
+                        ปิด
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Bottom Navigation -->
+        <nav class="hidden-desktop sticky-footer bg-white border-t border-gray-200 shadow-2xl">
+            <div class="flex justify-around max-w-6xl mx-auto">
+                <button onclick="setCurrentPage('gallery'); closeMobileMenu()" class="flex-1 py-3 flex flex-col items-center gap-1 transition text-blue-600 bg-blue-50 border-b-2 border-blue-600" id="navGallery">
+                    <span style="font-size: 24px;">🖼️</span>
+                    <span class="text-xs">แกลเรี่ย</span>
+                </button>
+                
+                <button id="navAdmin" onclick="setCurrentPage('admin'); closeMobileMenu()" class="flex-1 py-3 flex flex-col items-center gap-1 transition text-gray-600 hover:text-purple-600 hidden">
+                    <span style="font-size: 24px;">⚙️</span>
+                    <span class="text-xs">จัดการ</span>
+                </button>
+                
+                <button onclick="toggleAdmin()" class="flex-1 py-3 flex flex-col items-center gap-1 transition text-gray-600 hover:text-yellow-600">
+                    <span id="adminIcon" style="font-size: 24px;">🔐</span>
+                    <span id="adminText" class="text-xs">Admin</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        let currentPage = 'gallery';
+        let isAdmin = false;
+        let imageSize = 300;
+        let activities = [];
+        let selectedImage = null;
+
+        // Sample Data (จะถูกแทนที่ด้วยข้อมูลจาก Google Sheets)
+        const sampleActivities = [
+            {
+                id: 1,
+                title: '🎉 กิจกรรมวันสดใส',
+                description: 'กิจกรรมสนุกสำหรับวัยหนุ่มสาว เพื่อสร้างความสนิทและเสริมสร้างจิตสำนึก',
+                images: [
+                    { id: '1', name: 'photo1.jpg', url: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=800' },
+                    { id: '2', name: 'photo2.jpg', url: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800' },
+                    { id: '3', name: 'photo3.jpg', url: 'https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800' },
+                    { id: '4', name: 'photo4.jpg', url: 'https://images.unsplash.com/photo-1504609773096-104ff2176d46?w=800' }
+                ]
+            },
+            {
+                id: 2,
+                title: '🎨 กิจกรรมสร้างสรรค์',
+                description: 'พัฒนาทักษะและความสามารถโดยสร้างผลงานจากจินตนาการ',
+                images: [
+                    { id: '5', name: 'photo5.jpg', url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800' },
+                    { id: '6', name: 'photo6.jpg', url: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800' },
+                    { id: '7', name: 'photo7.jpg', url: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800' }
+                ]
+            },
+            {
+                id: 3,
+                title: '🏆 กิจกรรมแข่งขัน',
+                description: 'การแข่งขันอันสร้างสรรค์เพื่อค้นหาความแข็งแกร่ง',
+                images: [
+                    { id: '8', name: 'photo8.jpg', url: 'https://images.unsplash.com/photo-1552674605-5defe6aa44bb?w=800' },
+                    { id: '9', name: 'photo9.jpg', url: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800' }
+                ]
+            }
+        ];
+
+        // Initialize
+        window.onload = function() {
+            activities = sampleActivities;
+            renderGallery();
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hidden');
+            }, 500);
+        };
+
+        function setCurrentPage(page) {
+            currentPage = page;
+            document.getElementById('galleryContent').classList.toggle('hidden', page !== 'gallery');
+            document.getElementById('adminContent').classList.toggle('hidden', page !== 'admin');
+            
+            if (page === 'gallery') {
+                renderGallery();
+                document.getElementById('navGallery').classList.add('text-blue-600', 'bg-blue-50', 'border-b-2', 'border-blue-600');
+                document.getElementById('navGallery').classList.remove('text-gray-600', 'hover:text-blue-600');
+                document.getElementById('navAdmin')?.classList.remove('text-purple-600', 'bg-purple-50', 'border-b-2', 'border-purple-600');
+                document.getElementById('navAdmin')?.classList.add('text-gray-600', 'hover:text-purple-600');
+            } else {
+                renderAdmin();
+                document.getElementById('navGallery').classList.remove('text-blue-600', 'bg-blue-50', 'border-b-2', 'border-blue-600');
+                document.getElementById('navGallery').classList.add('text-gray-600', 'hover:text-blue-600');
+                document.getElementById('navAdmin')?.classList.add('text-purple-600', 'bg-purple-50', 'border-b-2', 'border-purple-600');
+                document.getElementById('navAdmin')?.classList.remove('text-gray-600', 'hover:text-purple-600');
+            }
+        }
+
+        function renderGallery() {
+            let html = '';
+            activities.forEach(activity => {
+                html += `
+                    <div class="mb-12">
+                        <div class="mb-6">
+                            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">${activity.title}</h2>
+                            <p class="text-gray-600">${activity.description}</p>
+                        </div>
+                        <div class="image-grid" style="grid-template-columns: repeat(auto-fill, minmax(${imageSize}px, 1fr));">
+                `;
+                
+                activity.images.forEach(img => {
+                    html += `
+                        <div class="image-card" onclick="openModal('${img.url}', '${img.name}')">
+                            <img src="${img.url}" alt="${img.name}">
+                            <div class="image-overlay">
+                                <span class="text-sm font-medium">กดเพื่อขยาย</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('galleryContent').innerHTML = html;
+        }
+
+        function renderAdmin() {
+            const html = `
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">⚙️ จัดการขนาดรูป</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-lg font-medium text-gray-700 mb-3">
+                                ขนาดรูปภาพ: <span id="sizeDisplay">${imageSize}</span>px
+                            </label>
+                            <input type="range" min="150" max="500" value="${imageSize}" 
+                                   onchange="changeImageSize(this.value)" 
+                                   class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                            <div class="flex justify-between text-sm text-gray-500 mt-2">
+                                <span>150px</span>
+                                <span>500px</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h3 class="font-medium text-gray-800 mb-3">📝 วิธีการใช้:</h3>
+                            <div class="space-y-2 text-sm text-gray-700">
+                                <p>✓ ปรับขนาดรูปด้วยแถบเลื่อน</p>
+                                <p>✓ สร้างโฟลเดอร์ใน Google Drive: <a href="https://drive.google.com/drive/folders/1Ymln5xGCN2GjplQujJIcmHbOwFLAlMaI" target="_blank" class="text-blue-600 underline">คลิกที่นี่</a></p>
+                                <p>✓ อัพโหลดรูปเข้าโฟลเดอร์</p>
+                                <p>✓ ข้อมูล Sheets: <a href="https://docs.google.com/spreadsheets/d/1awRAkSlzYyu2aBnr4cof0JX7fxNoDcoGOeOlfIoSTbU/edit" target="_blank" class="text-blue-600 underline">Google Sheets</a></p>
+                            </div>
+                        </div>
+
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h3 class="font-medium text-gray-800 mb-2">🔧 ข้อมูล API:</h3>
+                            <div class="space-y-2 text-sm text-gray-700 font-mono bg-white p-3 rounded">
+                                <p><strong>Sheet ID:</strong> 1awRAkSlzYyu2aBnr4cof0JX7fxNoDcoGOeOlfIoSTbU</p>
+                                <p><strong>Folder ID:</strong> 1Ymln5xGCN2GjplQujJIcmHbOwFLAlMaI</p>
+                                <p><strong>API Status:</strong> <span class="text-green-600">✓ Connected</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('adminContent').innerHTML = html;
+        }
+
+        function changeImageSize(size) {
+            imageSize = parseInt(size);
+            document.getElementById('sizeDisplay').textContent = imageSize;
+            renderGallery();
+        }
+
+        function openModal(imageUrl, imageName) {
+            selectedImage = { url: imageUrl, name: imageName };
+            document.getElementById('modalImage').src = imageUrl;
+            document.getElementById('imageModal').classList.remove('hidden');
+        }
+
+        function closeModal(e) {
+            if (e && e.target !== document.getElementById('imageModal')) return;
+            document.getElementById('imageModal').classList.add('hidden');
+            selectedImage = null;
+        }
+
+        function downloadImage() {
+            if (!selectedImage) return;
+            const link = document.createElement('a');
+            link.href = selectedImage.url;
+            link.download = selectedImage.name;
+            link.click();
+        }
+
+        function toggleAdmin() {
+            isAdmin = !isAdmin;
+            const adminBtn = document.getElementById('btnAdmin');
+            const mobileAdminBtn = document.getElementById('btnMobileAdmin');
+            const navAdmin = document.getElementById('navAdmin');
+            
+            if (isAdmin) {
+                adminBtn?.classList.remove('hidden');
+                mobileAdminBtn?.classList.remove('hidden');
+                navAdmin?.classList.remove('hidden');
+                document.getElementById('adminIcon').textContent = '👤';
+                document.getElementById('adminText').textContent = 'ผู้ใช้';
+                setCurrentPage('admin');
+            } else {
+                adminBtn?.classList.add('hidden');
+                mobileAdminBtn?.classList.add('hidden');
+                navAdmin?.classList.add('hidden');
+                document.getElementById('adminIcon').textContent = '🔐';
+                document.getElementById('adminText').textContent = 'Admin';
+                setCurrentPage('gallery');
+            }
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobileMenu').classList.toggle('hidden');
+        }
+
+        function closeMobileMenu() {
+            document.getElementById('mobileMenu').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
