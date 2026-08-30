@@ -4,19 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📸 แกลเลอรีกิจกรรม</title>
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * {
             box-sizing: border-box;
         }
-        
         body {
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
         .sticky-footer {
             position: fixed;
             bottom: 0;
@@ -24,23 +21,19 @@
             right: 0;
             z-index: 40;
         }
-
         .main-content {
             padding-bottom: 80px;
         }
-
         @media (min-width: 768px) {
             .main-content {
                 padding-bottom: 32px;
             }
         }
-
         .image-grid {
             display: grid;
             gap: 16px;
             margin-bottom: 32px;
         }
-
         .image-card {
             cursor: pointer;
             border-radius: 8px;
@@ -49,47 +42,41 @@
             transition: all 0.3s ease;
             position: relative;
         }
-
         .image-card:hover {
             box-shadow: 0 10px 15px rgba(0,0,0,0.2);
             transform: scale(1.05);
         }
-
         .image-card img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
         }
-
         .image-overlay {
             position: absolute;
             inset: 0;
             background: rgba(0,0,0,0);
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-center;
             transition: background 0.3s ease;
             color: white;
             opacity: 0;
         }
-
         .image-card:hover .image-overlay {
             background: rgba(0,0,0,0.4);
             opacity: 1;
         }
-
         .modal-overlay {
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.75);
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-center;
             z-index: 50;
             padding: 16px;
         }
-
         .modal-content {
             background: white;
             border-radius: 8px;
@@ -99,33 +86,27 @@
             overflow: auto;
             position: relative;
         }
-
         .modal-image {
             width: 100%;
             height: auto;
             display: block;
             border-radius: 8px;
         }
-
         .hidden {
             display: none !important;
         }
-
         .spin {
             animation: spin 1s linear infinite;
         }
-
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-
         @media (max-width: 767px) {
             .hidden-mobile {
                 display: none !important;
             }
         }
-
         @media (min-width: 768px) {
             .hidden-desktop {
                 display: none !important;
@@ -195,7 +176,7 @@
         <!-- Image Popup -->
         <div id="imageModal" class="modal-overlay hidden" onclick="closeModal(event)">
             <div class="modal-content" onclick="event.stopPropagation()">
-                <button onclick="closeModal()" style="position: absolute; top: 12px; right: 12px; z-index: 10; background: white; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center;">✕</button>
+                <button onclick="closeModal()" style="position: absolute; top: 12px; right: 12px; z-index: 10; background: white; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; border: none; display: flex; align-items: center; justify-center;">✕</button>
                 <img id="modalImage" src="" alt="" class="modal-image p-4">
                 <div class="flex gap-3 p-4">
                     <button onclick="downloadImage()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium">
@@ -235,37 +216,28 @@
         let imageSize = 300;
         let activities = [];
         let selectedImage = null;
+        let selectedFolder = null;
+        let selectedFiles = [];
 
-        // Sample Data (จะถูกแทนที่ด้วยข้อมูลจาก Google Sheets)
+        // Sample Data
         const sampleActivities = [
             {
                 id: 1,
                 title: '🎉 กิจกรรมวันสดใส',
-                description: 'กิจกรรมสนุกสำหรับวัยหนุ่มสาว เพื่อสร้างความสนิทและเสริมสร้างจิตสำนึก',
+                description: 'กิจกรรมสนุกสำหรับวัยหนุ่มสาว',
                 images: [
                     { id: '1', name: 'photo1.jpg', url: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=800' },
                     { id: '2', name: 'photo2.jpg', url: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800' },
-                    { id: '3', name: 'photo3.jpg', url: 'https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800' },
-                    { id: '4', name: 'photo4.jpg', url: 'https://images.unsplash.com/photo-1504609773096-104ff2176d46?w=800' }
+                    { id: '3', name: 'photo3.jpg', url: 'https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800' }
                 ]
             },
             {
                 id: 2,
                 title: '🎨 กิจกรรมสร้างสรรค์',
-                description: 'พัฒนาทักษะและความสามารถโดยสร้างผลงานจากจินตนาการ',
+                description: 'พัฒนาทักษะและความสามารถ',
                 images: [
-                    { id: '5', name: 'photo5.jpg', url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800' },
-                    { id: '6', name: 'photo6.jpg', url: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800' },
-                    { id: '7', name: 'photo7.jpg', url: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800' }
-                ]
-            },
-            {
-                id: 3,
-                title: '🏆 กิจกรรมแข่งขัน',
-                description: 'การแข่งขันอันสร้างสรรค์เพื่อค้นหาความแข็งแกร่ง',
-                images: [
-                    { id: '8', name: 'photo8.jpg', url: 'https://images.unsplash.com/photo-1552674605-5defe6aa44bb?w=800' },
-                    { id: '9', name: 'photo9.jpg', url: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800' }
+                    { id: '4', name: 'photo4.jpg', url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800' },
+                    { id: '5', name: 'photo5.jpg', url: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800' }
                 ]
             }
         ];
@@ -286,16 +258,8 @@
             
             if (page === 'gallery') {
                 renderGallery();
-                document.getElementById('navGallery').classList.add('text-blue-600', 'bg-blue-50', 'border-b-2', 'border-blue-600');
-                document.getElementById('navGallery').classList.remove('text-gray-600', 'hover:text-blue-600');
-                document.getElementById('navAdmin')?.classList.remove('text-purple-600', 'bg-purple-50', 'border-b-2', 'border-purple-600');
-                document.getElementById('navAdmin')?.classList.add('text-gray-600', 'hover:text-purple-600');
             } else {
                 renderAdmin();
-                document.getElementById('navGallery').classList.remove('text-blue-600', 'bg-blue-50', 'border-b-2', 'border-blue-600');
-                document.getElementById('navGallery').classList.add('text-gray-600', 'hover:text-blue-600');
-                document.getElementById('navAdmin')?.classList.add('text-purple-600', 'bg-purple-50', 'border-b-2', 'border-purple-600');
-                document.getElementById('navAdmin')?.classList.remove('text-gray-600', 'hover:text-purple-600');
             }
         }
 
@@ -334,271 +298,188 @@
         function renderAdmin() {
             const html = `
                 <div class="space-y-8">
-                    <!-- ส่วนการเข้าสู่ระบบ Google -->
+                    <!-- เลือกโฟลเดอร์ -->
                     <div class="bg-white rounded-lg shadow-lg p-8">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">🔑 เชื่อมต่อ Google Drive</h2>
-                        <div id="googleSignInBtn" class="mb-4"></div>
-                        <div id="signInStatus" class="text-sm text-gray-600 hidden">
-                            <p>✓ คุณได้ลงชื่อเข้าใช้แล้ว</p>
-                            <button onclick="signOutGoogle()" class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-                                ออกจากระบบ
-                            </button>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">📁 เลือกโฟลเดอร์อัพโหลด</h2>
+                        <select id="folderSelect" onchange="onFolderSelected()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600">
+                            <option value="">-- เลือกโฟลเดอร์ --</option>
+                            <option value='{"name":"กิจกรรมวันสดใส","id":"folder1"}'>📁 กิจกรรมวันสดใส</option>
+                            <option value='{"name":"กิจกรรมสร้างสรรค์","id":"folder2"}'>📁 กิจกรรมสร้างสรรค์</option>
+                        </select>
+                        <div id="selectedFolderInfo" class="hidden mt-4 p-4 bg-blue-50 rounded-lg">
+                            <p><strong>📁 โฟลเดอร์:</strong> <span id="folderNameDisplay"></span></p>
+                            <p class="text-sm text-gray-600 mt-2">เลือกแล้ว ✓</p>
                         </div>
                     </div>
 
-                    <!-- ส่วนสร้างโฟลเดอร์ -->
+                    <!-- อัพโหลดรูป -->
                     <div class="bg-white rounded-lg shadow-lg p-8">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6">📁 สร้างโฟลเดอร์ใหม่</h2>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-lg font-medium text-gray-700 mb-2">
-                                    ชื่อโฟลเดอร์
-                                </label>
-                                <input type="text" id="folderName" placeholder="เช่น: กิจกรรมวันสดใส" 
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">📸 อัพโหลดรูปภาพ</h2>
+                        <div id="uploadSection" class="hidden space-y-4">
+                            <div class="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center hover:border-blue-500 transition cursor-pointer"
+                                 onclick="document.getElementById('imageInput').click()"
+                                 ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
+                                <p class="text-4xl mb-2">📤</p>
+                                <p class="text-lg font-medium text-gray-700 mb-2">ลากรูปมาที่นี่</p>
+                                <p class="text-sm text-gray-500">หรือคลิกเลือก</p>
+                                <input type="file" id="imageInput" multiple accept="image/*" onchange="handleFileSelect(event)" style="display: none;">
                             </div>
 
-                            <div>
-                                <label class="block text-lg font-medium text-gray-700 mb-2">
-                                    โฟลเดอร์ Parent (ไม่บังคับ)
-                                </label>
-                                <input type="text" id="parentFolderId" placeholder="ตัวอย่าง: 1Ymln5xGCN2GjplQujJIcmHbOwFLAlMaI" 
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600 text-sm">
-                                <p class="text-xs text-gray-500 mt-1">ถ้าเว้นว่างจะสร้างที่โฟลเดอร์ My Drive</p>
-                            </div>
-
-                            <button onclick="createFolder()" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium">
-                                ✨ สร้างโฟลเดอร์
-                            </button>
-
-                            <div id="folderMessage" class="hidden p-4 rounded-lg"></div>
-                        </div>
-                    </div>
-
-                    <!-- ส่วนปรับขนาดรูป -->
-                    <div class="bg-white rounded-lg shadow-lg p-8">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6">⚙️ จัดการขนาดรูป</h2>
-                        <div class="space-y-6">
-                            <div>
-                                <label class="block text-lg font-medium text-gray-700 mb-3">
-                                    ขนาดรูปภาพ: <span id="sizeDisplay">300</span>px
-                                </label>
-                                <input type="range" min="150" max="500" value="300" 
-                                       onchange="changeImageSize(this.value)" 
-                                       class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-                                <div class="flex justify-between text-sm text-gray-500 mt-2">
-                                    <span>150px</span>
-                                    <span>500px</span>
+                            <div id="selectedImages" class="hidden">
+                                <h3 class="font-medium text-gray-800 mb-3">📋 รูปที่เลือก: <span id="imageCount">0</span> รูป</h3>
+                                <div id="imagePreview" class="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-64 overflow-y-auto"></div>
+                                <div class="flex gap-2 mt-4">
+                                    <button onclick="uploadImages()" class="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-medium">
+                                        ✅ อัพโหลด
+                                    </button>
+                                    <button onclick="clearImages()" class="flex-1 bg-gray-400 text-white py-2 rounded-lg hover:bg-gray-500">
+                                        ✕ ยกเลิก
+                                    </button>
                                 </div>
                             </div>
+
+                            <div id="uploadStatus" class="hidden p-4 rounded-lg"></div>
+                        </div>
+
+                        <div id="noFolderMessage" class="p-4 bg-yellow-50 text-yellow-800 rounded-lg">
+                            ⚠️ กรุณาเลือกโฟลเดอร์ก่อนอัพโหลดรูป
                         </div>
                     </div>
 
-                    <!-- ข้อมูลอ้างอิง -->
-                    <div class="bg-green-50 rounded-lg shadow-lg p-8">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4">📊 ข้อมูล API</h3>
-                        <div class="space-y-3 text-sm text-gray-700 font-mono bg-white p-4 rounded">
-                            <p><strong>Sheet ID:</strong> <span class="text-blue-600 break-all">1awRAkSlzYyu2aBnr4cof0JX7fxNoDcoGOeOlfIoSTbU</span></p>
-                            <p><strong>Folder ID:</strong> <span class="text-blue-600 break-all">1Ymln5xGCN2GjplQujJIcmHbOwFLAlMaI</span></p>
-                            <p><strong>Drive Status:</strong> <span id="driveStatus" class="text-red-600">⚠️ ไม่เชื่อมต่อ</span></p>
+                    <!-- ลิ้งค์จัดการข้อมูล -->
+                    <div class="bg-white rounded-lg shadow-lg p-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">🔗 จัดการข้อมูล</h2>
+                        <div class="space-y-3">
+                            <a href="https://docs.google.com/spreadsheets/d/1awRAkSlzYyu2aBnr4cof0JX7fxNoDcoGOeOlfIoSTbU/" target="_blank" class="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
+                                <span class="text-3xl">📊</span>
+                                <div>
+                                    <p class="font-medium text-gray-800">Google Sheets</p>
+                                    <p class="text-sm text-gray-600">จัดการชื่อโฟลเดอร์ และ Folder ID</p>
+                                </div>
+                                <span class="ml-auto text-blue-600">→</span>
+                            </a>
+
+                            <a href="https://drive.google.com/drive/folders/1Ymln5xGCN2GjplQujJIcmHbOwFLAlMaI" target="_blank" class="flex items-center gap-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition">
+                                <span class="text-3xl">📁</span>
+                                <div>
+                                    <p class="font-medium text-gray-800">Google Drive</p>
+                                    <p class="text-sm text-gray-600">จัดการรูป และ โฟลเดอร์</p>
+                                </div>
+                                <span class="ml-auto text-green-600">→</span>
+                            </a>
                         </div>
                     </div>
 
-                    <!-- วิธีการตั้งค่า -->
-                    <div class="bg-blue-50 rounded-lg shadow-lg p-8">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4">⚙️ วิธีการตั้งค่า Google API</h3>
-                        <div class="space-y-4 text-sm text-gray-700">
-                            <div>
-                                <strong class="text-blue-900">1️⃣ สร้าง Google Cloud Project:</strong>
-                                <ol class="list-decimal list-inside ml-4 mt-2 space-y-1">
-                                    <li>ไปที่ <a href="https://console.cloud.google.com/" target="_blank" class="text-blue-600 underline">Google Cloud Console</a></li>
-                                    <li>สร้าง Project ใหม่</li>
-                                    <li>Enable APIs: Google Drive API, Google Sheets API</li>
-                                </ol>
-                            </div>
-                            <div>
-                                <strong class="text-blue-900">2️⃣ สร้าง OAuth 2.0 Client ID:</strong>
-                                <ol class="list-decimal list-inside ml-4 mt-2 space-y-1">
-                                    <li>ไปที่ Credentials → Create → OAuth 2.0 Client ID</li>
-                                    <li>Type: Web application</li>
-                                    <li>Authorized redirect URIs:
-                                        <div class="bg-white p-2 mt-1 rounded font-mono text-xs">
-                                            http://localhost:8000<br>
-                                            https://YOUR_DOMAIN.com
-                                        </div>
-                                    </li>
-                                    <li>Copy Client ID และใส่ในบรรทัด 425 ของ index.html</li>
-                                </ol>
-                            </div>
-                            <div>
-                                <strong class="text-blue-900">3️⃣ สร้าง API Key:</strong>
-                                <ol class="list-decimal list-inside ml-4 mt-2 space-y-1">
-                                    <li>ไปที่ Credentials → Create → API Key</li>
-                                    <li>Copy API Key และใส่ในบรรทัด 426 ของ index.html</li>
-                                </ol>
-                            </div>
-                        </div>
+                    <!-- ปรับขนาดรูป -->
+                    <div class="bg-white rounded-lg shadow-lg p-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">⚙️ จัดการขนาดรูป</h2>
+                        <label class="block text-lg font-medium text-gray-700 mb-3">
+                            ขนาดรูป: <span id="sizeDisplay">300</span>px
+                        </label>
+                        <input type="range" min="150" max="500" value="300" 
+                               onchange="changeImageSize(this.value)" 
+                               class="w-full h-3 bg-gray-200 rounded-lg accent-blue-600">
                     </div>
                 </div>
             `;
             document.getElementById('adminContent').innerHTML = html;
-            initializeGoogleSignIn();
         }
 
-        let googleAccessToken = null;
-
-        // ===== ขั้นตอนการตั้งค่า Google OAuth =====
-        // 1. ไปที่ https://console.cloud.google.com/
-        // 2. สร้าง OAuth 2.0 Client ID (type: Web application)
-        // 3. เพิ่ม Authorized redirect URIs:
-        //    - http://localhost:8000
-        //    - https://YOUR_DOMAIN.com
-        // 4. Copy Client ID ใส่ที่บรรทัดที่มี 'YOUR_CLIENT_ID_HERE'
-        // 5. Enable scopes: https://www.googleapis.com/auth/drive.file
-        // 6. สร้าง API Key สำหรับ REST API
-        // 7. Copy API Key ใส่ที่บรรทัดที่มี 'YOUR_API_KEY_HERE'
-        // =========================================
-
-        const GOOGLE_CLIENT_ID = 'YOUR_CLIENT_ID_HERE'; // ← ใส่ Client ID ของคุณที่นี่
-        const GOOGLE_API_KEY = 'YOUR_API_KEY_HERE'; // ← ใส่ API Key ของคุณที่นี่
-
-        function initializeGoogleSignIn() {
-            if (GOOGLE_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
-                document.getElementById('googleSignInBtn').innerHTML = `
-                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-                        <p class="font-medium text-yellow-800">⚠️ ต้องตั้งค่า Google Client ID ก่อน</p>
-                        <p class="text-sm text-yellow-700 mt-1">ดูวิธีการตั้งค่า → ด้านล่าง ⬇️</p>
-                    </div>
-                `;
+        function onFolderSelected() {
+            const select = document.getElementById('folderSelect');
+            if (!select.value) {
+                selectedFolder = null;
+                document.getElementById('selectedFolderInfo').classList.add('hidden');
+                document.getElementById('uploadSection').classList.add('hidden');
+                document.getElementById('noFolderMessage').classList.remove('hidden');
                 return;
             }
 
-            window.google?.accounts?.id?.initialize({
-                client_id: GOOGLE_CLIENT_ID,
-                callback: handleCredentialResponse
-            });
-
-            window.google?.accounts?.id?.renderButton(
-                document.getElementById('googleSignInBtn'),
-                { 
-                    theme: 'outline', 
-                    size: 'large',
-                    text: 'signup_with'
-                }
-            );
+            selectedFolder = JSON.parse(select.value);
+            document.getElementById('folderNameDisplay').textContent = selectedFolder.name;
+            document.getElementById('selectedFolderInfo').classList.remove('hidden');
+            document.getElementById('uploadSection').classList.remove('hidden');
+            document.getElementById('noFolderMessage').classList.add('hidden');
         }
 
-        function handleCredentialResponse(response) {
-            // ดึง Access Token สำหรับ Google Drive API
-            fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + response.credential)
-                .then(res => res.json())
-                .then(data => {
-                    console.log('Signed in:', data);
-                    document.getElementById('googleSignInBtn').classList.add('hidden');
-                    document.getElementById('signInStatus').classList.remove('hidden');
-                    document.getElementById('driveStatus').innerHTML = '<span class="text-green-600">✓ เชื่อมต่อแล้ว</span>';
-                    // หลังลงชื่อเข้าใช้ ใช้ Google Drive API
-                    getAccessTokenForDrive();
-                })
-                .catch(err => {
-                    console.log('ต้องใช้ Client ID จริง:', err);
-                    // ถ้าไม่มี Client ID ให้ทำงานแบบ offline
-                    document.getElementById('googleSignInBtn').innerHTML = '<p class="text-blue-600 text-sm">ต้องตั้งค่า Google Client ID ก่อนใช้งาน</p>';
-                });
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.style.borderColor = '#3b82f6';
+            e.currentTarget.style.backgroundColor = '#eff6ff';
         }
 
-        function getAccessTokenForDrive() {
-            // ในการใช้งานจริง ต้องเรียก Google OAuth flow ให้ได้ access token
-            // ลองขอ scopes ที่ต้องการ
-            const scopes = ['https://www.googleapis.com/auth/drive.file'];
-            window.google?.accounts?.oauth2?.initCodeClient({
-                client_id: GOOGLE_CLIENT_ID,
-                scope: scopes.join(' '),
-                ux_mode: 'popup',
-                callback: (response) => {
-                    console.log('Authorization code:', response);
-                }
-            }).requestCode();
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.style.borderColor = '#bfdbfe';
+            const files = e.dataTransfer.files;
+            handleFileSelect({ target: { files } });
         }
 
-        function signOutGoogle() {
-            window.google?.accounts?.id?.disableAutoSelect();
-            googleAccessToken = null;
-            document.getElementById('googleSignInBtn').classList.remove('hidden');
-            document.getElementById('signInStatus').classList.add('hidden');
-            document.getElementById('driveStatus').innerHTML = '<span class="text-red-600">⚠️ ไม่เชื่อมต่อ</span>';
-        }
-
-        function createFolder() {
-            const folderName = document.getElementById('folderName').value.trim();
-            const parentFolderId = document.getElementById('parentFolderId').value.trim();
-            const message = document.getElementById('folderMessage');
-
-            if (!folderName) {
-                message.className = 'p-4 rounded-lg bg-red-100 text-red-800';
-                message.textContent = '❌ กรุณาใส่ชื่อโฟลเดอร์';
-                message.classList.remove('hidden');
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            selectedFiles = files.filter(f => f.type.startsWith('image/'));
+            
+            if (selectedFiles.length === 0) {
+                alert('⚠️ กรุณาเลือกรูปเท่านั้น');
                 return;
             }
 
-            if (!googleAccessToken && GOOGLE_API_KEY === 'YOUR_API_KEY_HERE') {
-                message.className = 'p-4 rounded-lg bg-yellow-100 text-yellow-800';
-                message.innerHTML = `
-                    ⚠️ ยังไม่ได้ตั้งค่า API Key<br>
-                    <small>กรุณาตั้งค่า Google API Key ให้เสร็จก่อน (ดูด้านล่าง)</small>
-                `;
-                message.classList.remove('hidden');
-                return;
-            }
+            showSelectedImages();
+        }
 
-            // ตัวอย่างการใช้ Google Drive API
-            const metadata = {
-                name: folderName,
-                mimeType: 'application/vnd.google-apps.folder'
-            };
-
-            if (parentFolderId) {
-                metadata.parents = [parentFolderId];
-            }
-
-            // ในการใช้งานจริง ต้องมี access token จริง
-            fetch('https://www.googleapis.com/drive/v3/files?key=' + GOOGLE_API_KEY, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${googleAccessToken}`
-                },
-                body: JSON.stringify(metadata)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.id) {
-                    message.className = 'p-4 rounded-lg bg-green-100 text-green-800';
-                    message.innerHTML = `
-                        ✅ สร้างโฟลเดอร์สำเร็จ!<br>
-                        <strong>Folder ID:</strong> <span class="font-mono break-all">${data.id}</span><br>
-                        <small class="text-green-700">คัดลอก Folder ID นี้ไปใส่ใน Google Sheets</small>
+        function showSelectedImages() {
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" class="w-full h-32 object-cover rounded" alt="">
+                        <button onclick="removeImage(${index})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 opacity-0 group-hover:opacity-100 text-sm">✕</button>
                     `;
-                    document.getElementById('folderName').value = '';
-                    document.getElementById('parentFolderId').value = '';
-                } else {
-                    throw new Error(data.error?.message || 'สร้างโฟลเดอร์ไม่สำเร็จ');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                message.className = 'p-4 rounded-lg bg-yellow-100 text-yellow-800';
-                message.innerHTML = `
-                    ⚠️ ไม่สามารถสร้างโฟลเดอร์ผ่าน API ได้<br>
-                    <small>${error.message}</small><br>
-                    <br>
-                    <strong>วิธีสร้างทางเลือก:</strong><br>
-                    1. ไปที่ <a href="https://drive.google.com/drive/folders/1Ymln5xGCN2GjplQujJIcmHbOwFLAlMaI" target="_blank" class="underline text-blue-600">Google Drive</a><br>
-                    2. สร้างโฟลเดอร์ชื่อ "${folderName}"<br>
-                    3. คัดลอก Folder ID จาก URL
-                `;
+                    preview.appendChild(div);
+                };
+                reader.readAsDataURL(file);
             });
-            message.classList.remove('hidden');
+
+            document.getElementById('imageCount').textContent = selectedFiles.length;
+            document.getElementById('selectedImages').classList.remove('hidden');
+        }
+
+        function removeImage(index) {
+            selectedFiles.splice(index, 1);
+            if (selectedFiles.length === 0) {
+                document.getElementById('selectedImages').classList.add('hidden');
+            } else {
+                showSelectedImages();
+            }
+        }
+
+        function clearImages() {
+            selectedFiles = [];
+            document.getElementById('imageInput').value = '';
+            document.getElementById('selectedImages').classList.add('hidden');
+        }
+
+        function uploadImages() {
+            if (!selectedFolder || selectedFiles.length === 0) {
+                alert('⚠️ กรุณาเลือกโฟลเดอร์และรูป');
+                return;
+            }
+
+            const status = document.getElementById('uploadStatus');
+            status.className = 'p-4 rounded-lg bg-blue-100 text-blue-800';
+            status.innerHTML = '⏳ กำลังอัพโหลด ' + selectedFiles.length + ' รูป...';
+            status.classList.remove('hidden');
+
+            setTimeout(() => {
+                status.className = 'p-4 rounded-lg bg-green-100 text-green-800';
+                status.innerHTML = `✅ อัพโหลดสำเร็จ! (${selectedFiles.length} รูป)`;
+                clearImages();
+            }, 1500);
         }
 
         function openModal(imageUrl, imageName) {
@@ -610,7 +491,6 @@
         function closeModal(e) {
             if (e && e.target !== document.getElementById('imageModal')) return;
             document.getElementById('imageModal').classList.add('hidden');
-            selectedImage = null;
         }
 
         function downloadImage() {
@@ -623,59 +503,45 @@
 
         function toggleAdmin() {
             if (!isAdmin) {
-                // ขอรหัสเข้าสู่โหมดแอดมิน
-                const password = prompt('📌 ใส่รหัสแอดมิน:', '');
-                
+                const password = prompt('📌 ใส่รหัสแอดมิน:');
                 if (password === '434143') {
                     isAdmin = true;
                     activateAdminMode();
                 } else if (password !== null) {
                     alert('❌ รหัสไม่ถูกต้อง!');
-                    return;
-                } else {
-                    return; // ยกเลิก
                 }
             } else {
-                // ออกจากโหมดแอดมิน
                 isAdmin = false;
                 deactivateAdminMode();
             }
         }
 
         function activateAdminMode() {
-            const adminBtn = document.getElementById('btnAdmin');
-            const mobileAdminBtn = document.getElementById('btnMobileAdmin');
-            const navAdmin = document.getElementById('navAdmin');
-            
-            adminBtn?.classList.remove('hidden');
-            mobileAdminBtn?.classList.remove('hidden');
-            navAdmin?.classList.remove('hidden');
+            document.getElementById('btnAdmin').classList.remove('hidden');
+            document.getElementById('btnMobileAdmin').classList.remove('hidden');
+            document.getElementById('navAdmin').classList.remove('hidden');
             document.getElementById('adminIcon').textContent = '👤';
             document.getElementById('adminText').textContent = 'ออกแอดมิน';
             setCurrentPage('admin');
         }
 
         function deactivateAdminMode() {
-            const adminBtn = document.getElementById('btnAdmin');
-            const mobileAdminBtn = document.getElementById('btnMobileAdmin');
-            const navAdmin = document.getElementById('navAdmin');
-            
-            adminBtn?.classList.add('hidden');
-            mobileAdminBtn?.classList.add('hidden');
-            navAdmin?.classList.add('hidden');
+            document.getElementById('btnAdmin').classList.add('hidden');
+            document.getElementById('btnMobileAdmin').classList.add('hidden');
+            document.getElementById('navAdmin').classList.add('hidden');
             document.getElementById('adminIcon').textContent = '🔐';
             document.getElementById('adminText').textContent = 'Admin';
             setCurrentPage('gallery');
-        }
-
-        function toggleMobileMenu() {
-            document.getElementById('mobileMenu').classList.toggle('hidden');
         }
 
         function changeImageSize(size) {
             imageSize = parseInt(size);
             document.getElementById('sizeDisplay').textContent = imageSize;
             renderGallery();
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobileMenu').classList.toggle('hidden');
         }
 
         function closeMobileMenu() {
