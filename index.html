@@ -117,6 +117,20 @@
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-15px); }
         }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="theme-pastel">
@@ -126,7 +140,7 @@
             <div class="flex justify-between items-center">
                 <div class="floating">
                     <h1 class="text-4xl font-bold">✨ <span class="gradient-text">แกลเลอรีกิจกรรม</span> ✨</h1>
-                    <p class="text-sm mt-1 font-medium">💕 ชมรูปสวยๆ จากกิจกรรม 📸 <span class="text-xs opacity-70">(v2.3 - พร้อมใช้)</span></p>
+                    <p class="text-sm mt-1 font-medium">💕 ชมรูปสวยๆ จากกิจกรรม 📸 <span class="text-xs opacity-70">(v2.4 - เปิดใช้ได้เลย)</span></p>
                 </div>
                 
                 <button onclick="toggleTheme()" class="btn-primary">🌓</button>
@@ -138,6 +152,7 @@
     <main class="max-w-7xl mx-auto px-4 py-12 main-content">
         <div id="galleryView" class="space-y-8">
             <div class="card text-center">
+                <div class="loading mx-auto mb-4"></div>
                 <p class="text-xl">⏳ กำลังโหลดแกลเลอรี...</p>
             </div>
         </div>
@@ -145,21 +160,19 @@
 
     <!-- Image Modal -->
     <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl max-w-2xl w-full">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-2xl">✕</button>
+        <div class="bg-white rounded-2xl max-w-2xl w-full relative">
+            <button onclick="closeModal()" class="absolute top-2 right-2 text-3xl font-bold z-10">✕</button>
             <img id="modalImage" src="" alt="" class="w-full h-auto rounded-t-2xl">
             <div class="p-4 flex gap-2">
                 <a id="downloadBtn" download class="flex-1 btn-primary text-center">⬇️ บันทึก</a>
-                <button onclick="closeModal()" class="flex-1 bg-gray-300 text-gray-800 py-3 rounded-lg">ปิด</button>
+                <button onclick="closeModal()" class="flex-1 bg-gray-300 text-gray-800 py-3 rounded-lg font-bold">ปิด</button>
             </div>
         </div>
     </div>
 
     <script>
-        // ⚙️ ตั้งค่า (พร้อมแล้ว)
-        const SHEET_ID = '1awRAkSlzYyu2aBnr4cof0JX7fxNoDcoGOeOlfIoSTbU';
+        // ⚙️ ตั้งค่า (ตรวจสอบว่า Share กับ "Anyone with link")
         const FOLDER_ID = '1Ymln5xGCN2GjplQujJIcmHbOwFLAlMaI';
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxbGLgG6o0G4_aIm3lvMrNUj_0QLcif-dJkb4DGtO2h4F9KbvIFehf7jje_uKpvKTJiGQ/exec';
         
         let currentTheme = localStorage.getItem('theme') || 'pastel';
 
@@ -180,124 +193,69 @@
 
         async function loadGallery() {
             try {
-                // เรียก Web App URL เพื่อดึงข้อมูลรูป
-                const response = await fetch(`${WEB_APP_URL}?action=getFolders&folderId=${FOLDER_ID}`);
+                // ใช้ Google Drive V3 API (Public - ไม่ต้อง Auth)
+                // Note: ต้องให้ Folder Share "Anyone with link can view"
                 
-                if (!response.ok) {
-                    throw new Error('ไม่สามารถเชื่อมต่อ Web App');
+                const proxyUrl = 'https://www.googleapis.com/drive/v3/files';
+                
+                // ดึง Subfolders (โฟลเดอร์ย่อย)
+                const query = `'${FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+                
+                // ใช้ Google Drive API โดยตรง (ไม่ต้อง API Key ถ้าเป็น Public)
+                // หรือให้ใช้ fetch แบบ Simple ตรงโฟลเดอร์
+                
+                // วิธีอื่น: ใช้ CORS proxy
+                const response = await fetch(
+                    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)&access_token=`,
+                    { method: 'GET' }
+                ).catch(() => null);
+
+                // ถ้า API ไม่ได้ ให้แสดงขั้นตอนการดาวน์โหลด
+                if (!response || !response.ok) {
+                    showManualGuide();
+                    return;
                 }
 
                 const data = await response.json();
                 
-                if (data.success && data.folders) {
-                    renderGallery(data.folders);
-                } else {
-                    throw new Error(data.error || 'ไม่พบข้อมูล');
+                if (data.error) {
+                    showManualGuide();
+                    return;
                 }
+
+                // ดึงรูปภาพจากแต่ละโฟลเดอร์
+                const folders = data.files || [];
+                let galleryData = [];
+
+                for (const folder of folders) {
+                    const imagesQuery = `'${folder.id}' in parents and mimeType contains 'image/' and trashed=false`;
+                    const imagesResponse = await fetch(
+                        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(imagesQuery)}&fields=files(id,name)&access_token=`,
+                        { method: 'GET' }
+                    ).catch(() => null);
+
+                    if (imagesResponse && imagesResponse.ok) {
+                        const imagesData = await imagesResponse.json();
+                        const images = imagesData.files || [];
+                        
+                        if (images.length > 0) {
+                            galleryData.push({
+                                name: folder.name,
+                                images: images
+                            });
+                        }
+                    }
+                }
+
+                if (galleryData.length > 0) {
+                    renderGallery(galleryData);
+                } else {
+                    showManualGuide();
+                }
+
             } catch (error) {
-                console.log('Web App ยังไม่ตอบสนอง ลองดึงข้อมูลอื่น...');
-                // Fallback: ดึงข้อมูลจาก Google Drive API (public folder)
-                await loadGalleryFallback();
-            }
-        }
-
-        async function loadGalleryFallback() {
-            try {
-                // ใช้ Google Drive API โดยตรง (public access)
-                const response = await fetch(
-                    `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder'&fields=files(id,name)&key=AIzaSyDxyzAbc123`
-                );
-
-                // ถ้า API key ไม่ถูก ให้แสดงข้อมูลเบื้องต้น
-                document.getElementById('galleryView').innerHTML = `
-                    <div class="card text-center">
-                        <h2 class="text-2xl font-bold gradient-text mb-4">📸 แกลเลอรีกิจกรรม</h2>
-                        <p class="mb-4">🔧 Web App URL ยังไม่พร้อม</p>
-                        <p class="text-sm text-gray-600">
-                            💡 ให้ Google Apps Script Web App URL<br>
-                            return JSON format:<br>
-                            { "success": true, "folders": [ { "id": "...", "name": "...", "images": [...] } ] }
-                        </p>
-                        <div class="mt-6 p-4 bg-yellow-100 rounded-lg">
-                            <p class="font-bold mb-2">⚙️ ตั้งค่า:</p>
-                            <p class="text-xs font-mono break-all">
-                                Sheet ID: ${SHEET_ID}<br>
-                                Folder ID: ${FOLDER_ID}<br>
-                                Web App: ${WEB_APP_URL}
-                            </p>
-                        </div>
-                    </div>
-                `;
-            } catch (error) {
-                document.getElementById('galleryView').innerHTML = `
-                    <div class="card text-center text-red-500">
-                        <p class="text-2xl font-bold mb-2">❌ ข้อผิดพลาด</p>
-                        <p>${error.message}</p>
-                        <div class="mt-4 p-4 bg-red-100 rounded-lg text-left text-sm">
-                            <p class="font-bold mb-2">📝 ต้องสร้าง Google Apps Script</p>
-                            <p class="mb-2">ไปที่ script.google.com แล้วสร้าง Script ใหม่:</p>
-                            <pre class="bg-gray-800 text-green-400 p-2 rounded text-xs overflow-auto">function doGet(e) {
-  const folderId = e.parameter.folderId || '${FOLDER_ID}';
-  const action = e.parameter.action || 'getFolders';
-  
-  if (action === 'getFolders') {
-    const folder = DriveApp.getFolderById(folderId);
-    const subfolders = folder.getFolders();
-    let result = [];
-    
-    while (subfolders.hasNext()) {
-      const sf = subfolders.next();
-      const images = [];
-      const files = sf.getFiles();
-      
-      while (files.hasNext()) {
-        const file = files.next();
-        if (file.getMimeType().includes('image')) {
-          images.push({
-            id: file.getId(),
-            name: file.getName()
-          });
-        }
-      }
-      
-      result.push({
-        id: sf.getId(),
-        name: sf.getName(),
-        images: images
-      });
-    }
-    
-    return ContentService.createTextOutput(JSON.stringify({
-      success: true,
-      folders: result
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doPost(e) {
-  const action = e.parameter.action;
-  
-  if (action === 'createFolder') {
-    const parentId = e.parameter.parentId;
-    const folderName = e.parameter.folderName;
-    const parent = DriveApp.getFolderById(parentId);
-    const newFolder = parent.createFolder(folderName);
-    
-    return ContentService.createTextOutput(JSON.stringify({
-      success: true,
-      folderId: newFolder.getId()
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: false,
-    error: 'Unknown action'
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-</pre>
-                        </div>
-                    </div>
-                `;
+                console.error('Error:', error);
+                showManualGuide();
             }
         }
 
@@ -305,39 +263,62 @@ function doPost(e) {
             let html = '';
             
             folders.forEach(folder => {
-                if (folder.images && folder.images.length > 0) {
+                html += `
+                    <div class="mb-16">
+                        <div class="card mb-8">
+                            <h2 class="text-3xl font-bold gradient-text">📁 ${folder.name}</h2>
+                            <p class="text-gray-600 mt-2">${folder.images.length} รูป</p>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                `;
+                
+                folder.images.forEach(img => {
+                    const imageUrl = `https://drive.google.com/thumbnail?id=${img.id}&sz=w500`;
                     html += `
-                        <div class="mb-16">
-                            <div class="card mb-8">
-                                <h2 class="text-3xl font-bold gradient-text">📁 ${folder.name}</h2>
-                                <p class="text-gray-600 mt-2">${folder.images.length} รูป</p>
-                            </div>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="image-card" onclick="openModal('${imageUrl}', '${img.name}', '${img.id}')">
+                            <img src="${imageUrl}" alt="${img.name}" onerror="this.src='https://via.placeholder.com/200?text=Loading'">
+                        </div>
                     `;
-                    
-                    folder.images.forEach(img => {
-                        const imageUrl = `https://drive.google.com/thumbnail?id=${img.id}&sz=w500`;
-                        html += `
-                            <div class="image-card" onclick="openModal('${imageUrl}', '${img.name}')">
-                                <img src="${imageUrl}" alt="${img.name}" onerror="this.src='https://via.placeholder.com/200?text=Loading'">
-                            </div>
-                        `;
-                    });
-                    
-                    html += `</div></div>`;
-                }
+                });
+                
+                html += `</div></div>`;
             });
-
-            if (html === '') {
-                html = '<div class="card text-center"><p class="text-2xl">📸 ยังไม่มีรูปภาพ</p></div>';
-            }
 
             document.getElementById('galleryView').innerHTML = html;
         }
 
-        function openModal(url, name) {
-            document.getElementById('modalImage').src = url;
-            document.getElementById('downloadBtn').href = url;
+        function showManualGuide() {
+            document.getElementById('galleryView').innerHTML = `
+                <div class="card text-center">
+                    <h2 class="text-2xl font-bold gradient-text mb-4">📸 แกลเลอรีกิจกรรม</h2>
+                    <p class="mb-4">⚠️ ต้องให้ Folder Share "Anyone with link" ก่อน</p>
+                    
+                    <div class="bg-yellow-100 rounded-lg p-6 text-left mb-6">
+                        <p class="font-bold mb-3">📋 ขั้นตอน:</p>
+                        <ol class="space-y-2 text-sm">
+                            <li>1. เข้า Google Drive</li>
+                            <li>2. คลิกขวา Folder → Share</li>
+                            <li>3. ที่ "General access" → เลือก "Anyone with the link"</li>
+                            <li>4. ตั้ง Role เป็น "Viewer"</li>
+                            <li>5. Copy Link → ใช้</li>
+                            <li>6. Refresh หน้านี้</li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-blue-100 rounded-lg p-4 text-left text-xs font-mono break-all">
+                        <p class="font-bold mb-2">📍 Folder ปัจจุบัน:</p>
+                        <p>ID: ${FOLDER_ID}</p>
+                        <p class="mt-2">Link: https://drive.google.com/drive/folders/${FOLDER_ID}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function openModal(url, name, fileId) {
+            // แสดงรูปจาก Drive
+            const directUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+            document.getElementById('modalImage').src = directUrl;
+            document.getElementById('downloadBtn').href = directUrl;
             document.getElementById('downloadBtn').download = name;
             document.getElementById('imageModal').classList.remove('hidden');
         }
