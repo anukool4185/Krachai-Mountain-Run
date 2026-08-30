@@ -177,6 +177,33 @@
             border-radius: 12px;
             margin: 20px 0;
             font-weight: bold;
+            line-height: 1.6;
+        }
+
+        .success-msg {
+            background: rgba(0, 200, 0, 0.1);
+            border: 2px solid rgba(0, 200, 0, 0.3);
+            color: #00aa00;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .debug-info {
+            background: rgba(100, 100, 200, 0.1);
+            border: 2px solid rgba(100, 100, 200, 0.3);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-top: 10px;
+            font-family: monospace;
+        }
+
+        .version {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-left: 8px;
         }
     </style>
 </head>
@@ -187,7 +214,7 @@
             <div class="flex justify-between items-center">
                 <div class="floating">
                     <h1 class="text-4xl font-bold">✨ <span class="gradient-text">แกลเลอรีกิจกรรม</span> ✨</h1>
-                    <p class="text-sm mt-1 font-medium">💕 ชมรูปสวยๆ จากกิจกรรม 📸</p>
+                    <p class="text-sm mt-1 font-medium">💕 ชมรูปสวยๆ จากกิจกรรม 📸 <span class="version">v2.1.1</span></p>
                 </div>
                 
                 <div class="hidden-mobile flex gap-2">
@@ -279,6 +306,7 @@
 
         const SCOPES = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets';
         const ADMIN_PASSWORD = '434143';
+        const VERSION = 'v2.1.1';
 
         let authToken = null;
         let gapi_loaded = false;
@@ -289,6 +317,12 @@
         let selectedFiles = [];
 
         window.onload = async () => {
+            console.log('🚀 แกลเลอรีกิจกรรม ' + VERSION + ' เริ่มโหลด');
+            console.log('📋 ตัวแปรที่ใช้:');
+            console.log('  - CLIENT_ID:', CLIENT_ID);
+            console.log('  - API_KEY:', API_KEY ? 'ตั้งค่าแล้ว' : 'ยังไม่ได้ตั้งค่า');
+            console.log('  - FOLDER_ID:', GOOGLE_DRIVE_FOLDER_ID);
+            
             initTheme();
             gapi.load('client', initializeGoogleAPI);
             document.getElementById('adminBtn').addEventListener('click', toggleAdmin);
@@ -335,9 +369,10 @@
 
         async function initializeGoogleAPI() {
             try {
-                // ⚠️ ตรวจสอบว่าแทนค่า API_KEY แล้ว
+                console.log('⚙️ กำลังเตรียม Google API...');
+                
                 if (API_KEY === 'YOUR_API_KEY') {
-                    showNotification('❌ ต้องแทนค่า API_KEY ก่อน', 'error');
+                    console.error('❌ API_KEY ยังไม่ได้ตั้งค่า');
                     return;
                 }
 
@@ -351,8 +386,9 @@
                     ]
                 });
                 gapi_loaded = true;
+                console.log('✅ Google API เตรียมพร้อมแล้ว');
             } catch (error) {
-                console.error('ข้อผิดพลาด:', error);
+                console.error('❌ ข้อผิดพลาด:', error);
                 showNotification('❌ ข้อผิดพลาด: ' + error.message, 'error');
             }
         }
@@ -369,9 +405,11 @@
             }
 
             try {
+                console.log('🔐 กำลังเข้าสู่ Google...');
                 const response = await gapi.auth2.getAuthInstance().signIn();
                 await handleAuthSuccess();
             } catch (error) {
+                console.error('❌ ข้อผิดพลาด:', error);
                 showNotification('❌ ไม่สามารถเข้าสู่ระบบ: ' + error.message, 'error');
             }
         }
@@ -381,6 +419,8 @@
             const profile = auth.currentUser.get().getBasicProfile();
             userEmail = profile.getEmail();
             authToken = gapi.auth.getToken().access_token;
+
+            console.log('✅ เข้าสู่ระบบแล้ว:', userEmail);
 
             document.getElementById('emailDisplay').textContent = `📧 ${userEmail}`;
             document.getElementById('adminGoogleSignIn').classList.add('hidden');
@@ -400,20 +440,52 @@
                 document.getElementById('adminGoogleSignOut').classList.add('hidden');
                 document.getElementById('googleSignInBtn').classList.remove('hidden');
                 document.getElementById('googleSignOutBtn').classList.add('hidden');
+                console.log('✅ ออกจากระบบแล้ว');
                 showNotification('✅ ออกจากระบบสำเร็จ', 'success');
             });
         }
 
         async function loadGalleryForPublic() {
             try {
+                console.log('📸 กำลังโหลดแกลเลอรี...');
+                
                 // ⚠️ ตรวจสอบว่าแทนค่า API_KEY แล้ว
                 if (API_KEY === 'YOUR_API_KEY') {
                     document.getElementById('galleryView').innerHTML = `
                         <div class="error-msg">
-                            ❌ ต้องแทนค่า API_KEY ในไฟล์ index.html ก่อน<br>
-                            ดู console เพื่อรายละเอียด
+                            ❌ <strong>ต้องแทนค่า API_KEY ก่อน!</strong><br><br>
+                            📝 ขั้นตอน:<br>
+                            1. ไปที่ Google Cloud Console<br>
+                            2. Credentials → API Key<br>
+                            3. Copy API Key<br>
+                            4. เปิดไฟล์ index.html<br>
+                            5. แทน 'YOUR_API_KEY' ด้วย API Key ที่คัดลอก<br>
+                            6. บันทึกไฟล์<br>
+                            7. Refresh เบราว์เซอร์<br><br>
+                            💡 ป้องกัน: ใช้ API_KEY ที่ได้รับอนุญาตให้ Drive API เท่านั้น
                         </div>
                     `;
+                    console.error('❌ API_KEY ยังไม่ได้ตั้งค่า');
+                    return;
+                }
+
+                // ⚠️ ตรวจสอบ Folder ID
+                if (!GOOGLE_DRIVE_FOLDER_ID || GOOGLE_DRIVE_FOLDER_ID === 'YOUR_FOLDER_ID') {
+                    document.getElementById('galleryView').innerHTML = `
+                        <div class="error-msg">
+                            ❌ <strong>Folder ID ไม่ถูกต้อง!</strong><br><br>
+                            📝 วิธีหาได้:<br>
+                            1. เปิด Google Drive<br>
+                            2. คลิกขวาโฟลเดอร์<br>
+                            3. "Get link"<br>
+                            4. Copy URL<br>
+                            5. ค้นหา: https://drive.google.com/drive/folders/<strong>[ID]</strong><br>
+                            6. แทน 'YOUR_FOLDER_ID' ด้วย ID นี้<br>
+                            7. บันทึกไฟล์<br>
+                            8. Refresh เบราว์เซอร์
+                        </div>
+                    `;
+                    console.error('❌ Folder ID ไม่ถูกต้อง');
                     return;
                 }
 
@@ -422,11 +494,37 @@
                 );
                 
                 if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
+                    console.error('❌ API Error:', response.status, response.statusText);
+                    
+                    if (response.status === 403) {
+                        throw new Error('Forbidden - ตรวจสอบ API Key และ Enable Drive API');
+                    } else if (response.status === 404) {
+                        throw new Error('Folder ไม่พบ - ตรวจสอบ Folder ID');
+                    } else {
+                        throw new Error(`API Error: ${response.status}`);
+                    }
                 }
                 
                 const data = await response.json();
                 const folders = data.files || [];
+
+                console.log('✅ พบโฟลเดอร์:', folders.length);
+
+                if (folders.length === 0) {
+                    document.getElementById('galleryView').innerHTML = `
+                        <div class="success-msg">
+                            ✅ การเชื่อมต่อ API สำเร็จแล้ว<br>
+                            ⚠️ แต่ Folder นี้ยังไม่มีโฟลเดอร์ย่อย<br><br>
+                            📝 เพื่อเพิ่มรูป:<br>
+                            1. เข้า Admin (รหัส: 434143)<br>
+                            2. คลิก "เข้าสู่ Google"<br>
+                            3. สร้างโฟลเดอร์ใหม่<br>
+                            4. สร้างโฟลเดอร์ย่อย<br>
+                            5. อัพโหลดรูป
+                        </div>
+                    `;
+                    return;
+                }
 
                 let html = '';
                 for (const folder of folders) {
@@ -435,6 +533,8 @@
                     );
                     const imagesData = await imagesResponse.json();
                     const images = imagesData.files || [];
+
+                    console.log(`📁 ${folder.name}: ${images.length} รูป`);
 
                     if (images.length > 0) {
                         html += `
@@ -463,16 +563,33 @@
                 }
 
                 if (html === '') {
-                    html = '<p class="text-center text-2xl text-gray-500">📸 ยังไม่มีรูปภาพ</p>';
+                    document.getElementById('galleryView').innerHTML = `
+                        <div class="success-msg">
+                            ✅ การเชื่อมต่อ API สำเร็จแล้ว<br>
+                            ⚠️ พบโฟลเดอร์แต่ยังไม่มีรูป<br><br>
+                            📝 เพื่อเพิ่มรูป:<br>
+                            1. เข้า Admin (รหัส: 434143)<br>
+                            2. คลิก "เข้าสู่ Google"<br>
+                            3. สร้างโฟลเดอร์ใหม่ (หรือเลือกที่มี)<br>
+                            4. สร้างโฟลเดอร์ย่อย<br>
+                            5. อัพโหลดรูป
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('galleryView').innerHTML = html;
+                    console.log('✅ แกลเลอรีโหลดสำเร็จ');
                 }
-
-                document.getElementById('galleryView').innerHTML = html;
             } catch (error) {
-                console.error('ข้อผิดพลาด:', error);
+                console.error('❌ ข้อผิดพลาด:', error);
                 document.getElementById('galleryView').innerHTML = `
                     <div class="error-msg">
-                        ❌ ข้อผิดพลาด: ${error.message}<br>
-                        ตรวจสอบ API_KEY และ FOLDER_ID
+                        ❌ <strong>ข้อผิดพลาด:</strong> ${error.message}<br><br>
+                        🔍 <strong>ตรวจสอบ:</strong><br>
+                        1. API_KEY - ต้องแทนค่า<br>
+                        2. Drive API - ต้อง Enable<br>
+                        3. Folder ID - ต้องถูกต้อง<br>
+                        4. OAuth Consent Screen - ต้องตั้งค่า<br><br>
+                        💡 เปิด Browser Console (F12) เพื่อดู Error ทั้งหมด
                     </div>
                 `;
             }
@@ -481,6 +598,7 @@
         async function loadFolders() {
             try {
                 showLoading(true, 'กำลังโหลดโฟลเดอร์...');
+                console.log('📁 กำลังโหลดโฟลเดอร์ทั้งหมด...');
                 
                 const response = await gapi.client.drive.files.list({
                     q: "mimeType='application/vnd.google-apps.folder' and trashed=false",
@@ -492,6 +610,8 @@
                 const folders = response.result.files || [];
                 const foldersList = document.getElementById('foldersList');
                 
+                console.log('✅ พบโฟลเดอร์:', folders.length);
+
                 if (folders.length === 0) {
                     foldersList.innerHTML = '<p class="text-gray-500">ยังไม่มีโฟลเดอร์</p>';
                 } else {
@@ -506,6 +626,7 @@
 
                 showLoading(false);
             } catch (error) {
+                console.error('❌ ข้อผิดพลาด:', error);
                 showNotification('❌ ข้อผิดพลาด: ' + error.message, 'error');
                 showLoading(false);
             }
@@ -517,6 +638,7 @@
 
             try {
                 showLoading(true, 'กำลังสร้างโฟลเดอร์...');
+                console.log('📁 สร้างโฟลเดอร์:', name);
 
                 const fileMetadata = {
                     name: name,
@@ -528,10 +650,12 @@
                     fields: 'id'
                 });
 
+                console.log('✅ สร้างโฟลเดอร์สำเร็จ');
                 showNotification('✅ สร้างโฟลเดอร์สำเร็จ!', 'success');
                 await loadFolders();
                 showLoading(false);
             } catch (error) {
+                console.error('❌ ข้อผิดพลาด:', error);
                 showNotification('❌ ข้อผิดพลาด: ' + error.message, 'error');
                 showLoading(false);
             }
@@ -542,9 +666,11 @@
 
             try {
                 showLoading(true, 'กำลังลบโฟลเดอร์...');
+                console.log('🗑️ ลบโฟลเดอร์:', folderId);
 
                 await gapi.client.drive.files.delete({ fileId: folderId });
 
+                console.log('✅ ลบโฟลเดอร์สำเร็จ');
                 showNotification('✅ ลบโฟลเดอร์สำเร็จ!', 'success');
                 await loadFolders();
                 document.getElementById('subfolderSection').classList.add('hidden');
@@ -552,6 +678,7 @@
                 selectedFolderId = null;
                 showLoading(false);
             } catch (error) {
+                console.error('❌ ข้อผิดพลาด:', error);
                 showNotification('❌ ข้อผิดพลาด: ' + error.message, 'error');
                 showLoading(false);
             }
@@ -559,6 +686,7 @@
 
         async function selectFolder(folderId, folderName) {
             selectedFolderId = folderId;
+            console.log('✅ เลือกโฟลเดอร์:', folderName);
             showNotification(`✅ เลือกโฟลเดอร์: ${folderName}`, 'success');
             
             document.getElementById('subfolderSection').classList.remove('hidden');
@@ -581,6 +709,7 @@
 
             try {
                 showLoading(true, 'กำลังสร้างโฟลเดอร์ย่อย...');
+                console.log('📂 สร้างโฟลเดอร์ย่อย:', name);
 
                 const fileMetadata = {
                     name: name,
@@ -594,10 +723,12 @@
                 });
 
                 document.getElementById('subfolderNameInput').value = '';
+                console.log('✅ สร้างโฟลเดอร์ย่อยสำเร็จ');
                 showNotification('✅ สร้างโฟลเดอร์ย่อยสำเร็จ!', 'success');
                 await loadSubfolders();
                 showLoading(false);
             } catch (error) {
+                console.error('❌ ข้อผิดพลาด:', error);
                 showNotification('❌ ข้อผิดพลาด: ' + error.message, 'error');
                 showLoading(false);
             }
@@ -605,6 +736,7 @@
 
         async function loadSubfolders() {
             try {
+                console.log('📂 กำลังโหลดโฟลเดอร์ย่อย...');
                 const response = await gapi.client.drive.files.list({
                     q: `'${selectedFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
                     spaces: 'drive',
@@ -614,6 +746,8 @@
 
                 const subfolders = response.result.files || [];
                 const list = document.getElementById('subfolderList');
+
+                console.log('✅ พบโฟลเดอร์ย่อย:', subfolders.length);
 
                 if (subfolders.length === 0) {
                     list.innerHTML = '<p class="text-gray-500">ยังไม่มีโฟลเดอร์ย่อย</p>';
@@ -626,7 +760,7 @@
                     `).join('');
                 }
             } catch (error) {
-                console.error('ข้อผิดพลาด:', error);
+                console.error('❌ ข้อผิดพลาด:', error);
             }
         }
 
@@ -634,10 +768,13 @@
             if (!confirm('ต้องการลบโฟลเดอร์ย่อยนี้?')) return;
 
             try {
+                console.log('🗑️ ลบโฟลเดอร์ย่อย:', folderId);
                 await gapi.client.drive.files.delete({ fileId: folderId });
+                console.log('✅ ลบโฟลเดอร์ย่อยสำเร็จ');
                 showNotification('✅ ลบโฟลเดอร์ย่อยสำเร็จ!', 'success');
                 await loadSubfolders();
             } catch (error) {
+                console.error('❌ ข้อผิดพลาด:', error);
                 showNotification('❌ ข้อผิดพลาด: ' + error.message, 'error');
             }
         }
@@ -653,6 +790,8 @@
                 showNotification('⚠️ เลือกรูปภาพเท่านั้น', 'warning');
                 return;
             }
+
+            console.log('📸 เลือกรูป:', files.length);
 
             const preview = document.getElementById('imagePreview');
             preview.innerHTML = files.map((file, index) => `
@@ -685,6 +824,7 @@
 
             try {
                 showLoading(true, `กำลังอัพโหลด ${selectedFiles.length} รูป...`);
+                console.log('📸 อัพโหลด:', selectedFiles.length, 'รูป');
 
                 for (const file of selectedFiles) {
                     const metadata = {
@@ -708,9 +848,11 @@
                 document.getElementById('imagePreview').innerHTML = '';
                 document.getElementById('uploadBtn').classList.add('hidden');
 
+                console.log('✅ อัพโหลดสำเร็จ');
                 showNotification('✅ อัพโหลดสำเร็จ!', 'success');
                 showLoading(false);
             } catch (error) {
+                console.error('❌ ข้อผิดพลาด:', error);
                 showNotification('❌ ข้อผิดพลาด: ' + error.message, 'error');
                 showLoading(false);
             }
