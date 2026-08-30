@@ -110,11 +110,12 @@
             </div>
 
             <div id="bannerIOS" class="hidden mb-4">
-                <button onclick="openInSafari()" class="btn-primary w-full mb-3">🚀 เปิดใน Safari เลย</button>
-                <div class="text-left bg-yellow-100 rounded-xl p-4 text-sm" style="color:#333;">
-                    <p class="font-bold mb-2">📱 ถ้าปุ่มไม่ทำงาน ทำเอง:</p>
-                    <p>1. กดปุ่ม <b>•••</b> หรือ <b>⤴</b> มุมขวาบน/ล่าง</p>
-                    <p>2. เลือก <b>"เปิดในเบราว์เซอร์"</b> หรือ <b>"Open in Safari"</b></p>
+                <div class="text-left bg-yellow-100 rounded-xl p-4 text-sm mb-3" style="color:#333;">
+                    <p class="font-bold mb-2 text-center">📱 วิธีเปิดใน Safari (LINE)</p>
+                    <p class="mb-1">1. มองมุม<b>ขวาล่าง</b>ของจอ</p>
+                    <p class="mb-1">2. กดไอคอน <b>⤴ (ลูกศรออก)</b> หรือ <b>เข็มทิศ Safari</b></p>
+                    <p class="mb-1">3. หรือกด <b>•••</b> → <b>"เปิดด้วยเบราว์เซอร์อื่น"</b></p>
+                    <p class="text-xs mt-2 opacity-70">* iOS ไม่อนุญาตให้เว็บเปิด Safari เอง ต้องกดเองนะครับ</p>
                 </div>
             </div>
 
@@ -140,7 +141,7 @@
                 <div class="floating">
                     <h1 class="text-4xl font-bold">✨ <span class="gradient-text">แกลเลอรีกิจกรรม</span> ✨</h1>
                     <p class="text-sm mt-1 font-medium">💕 ชมรูปสวยๆ จากกิจกรรม 📸</p>
-                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v5.9 - iOS เปิด Safari</p>
+                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v6.0 - คู่มือเปิดเบราว์เซอร์</p>
                 </div>
                 <div class="flex gap-2">
                     <button id="adminBtn" onclick="toggleAdmin()" class="btn-primary">🔐 Admin</button>
@@ -286,21 +287,6 @@
             const intentUrl = 'intent://' + url.replace(/^https?:\/\//, '') +
                 '#Intent;scheme=https;package=com.android.chrome;end';
             window.location.href = intentUrl;
-        }
-
-        // เปิดใน Safari (iOS) — ลองหลายวิธี
-        function openInSafari() {
-            const url = window.location.href;
-            // วิธีที่ 1: x-safari- scheme (เปิด Safari จาก in-app browser)
-            try {
-                window.location.href = 'x-safari-' + url;
-            } catch (e) {}
-            // วิธีที่ 2: ถ้ายังไม่เปิด ลอง googlechrome:// (เผื่อมี Chrome)
-            setTimeout(() => {
-                try {
-                    window.location.href = 'googlechrome://' + url.replace(/^https?:\/\//, '');
-                } catch (e) {}
-            }, 500);
         }
 
         // คัดลอกลิงก์
