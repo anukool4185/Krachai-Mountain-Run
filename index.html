@@ -53,6 +53,50 @@
         .image-card:hover { transform: translateY(-12px) scale(1.02); }
         .image-card img { width: 100%; height: 100%; object-fit: cover; }
 
+        /* wrapper + checkbox เลือกหลายรูป */
+        .card-wrap { position: relative; }
+        .sel-check {
+            position: absolute; top: 10px; right: 10px; z-index: 10;
+            width: 28px; height: 28px; cursor: pointer;
+            appearance: none; -webkit-appearance: none;
+            background: rgba(255,255,255,0.85); border: 2px solid #ec4899;
+            border-radius: 8px; transition: all 0.2s ease;
+        }
+        .sel-check:checked { background: #ec4899; }
+        .sel-check:checked::after {
+            content: '✓'; color: white; font-weight: bold; font-size: 18px;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+        .card-wrap.selected .image-card { border-color: #ec4899; transform: scale(0.96); }
+
+        /* รูปย่อวิ่ง (fly animation) */
+        .fly-clone {
+            position: fixed; z-index: 100; pointer-events: none;
+            border-radius: 14px; object-fit: cover;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ปุ่มลอยด้านล่าง */
+        #floatingBar {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            z-index: 45; transition: all 0.3s ease;
+        }
+        #floatingBar.hidden-bar { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(20px); }
+        .float-inner {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 16px; border-radius: 50px;
+            backdrop-filter: blur(12px);
+        }
+        .theme-pastel .float-inner { background: rgba(255,255,255,0.9); box-shadow: 0 8px 30px rgba(236,72,153,0.3); border: 2px solid rgba(236,72,153,0.3); }
+        .theme-dark .float-inner { background: rgba(30,30,30,0.9); box-shadow: 0 8px 30px rgba(255,27,53,0.3); border: 2px solid rgba(255,27,53,0.3); }
+        .float-btn {
+            color: white; padding: 10px 18px; border-radius: 50px; border: none;
+            cursor: pointer; font-weight: 600; font-size: 14px; white-space: nowrap;
+        }
+        .theme-pastel .float-btn { background: linear-gradient(135deg, #f472b6, #c084fc); }
+        .theme-dark .float-btn { background: linear-gradient(135deg, #ff1b35, #ff4757); }
+
         .subfolder-card { cursor: pointer; border-radius: 20px; padding: 30px; text-align: center; transition: all 0.3s ease; border: 2px solid rgba(236, 72, 153, 0.3); }
         .theme-pastel .subfolder-card { background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(252, 231, 243, 0.6)); box-shadow: 0 8px 20px rgba(236, 72, 153, 0.15); }
         .theme-dark .subfolder-card { background: linear-gradient(135deg, rgba(30, 30, 30, 0.95), rgba(40, 30, 35, 0.6)); border-color: rgba(255, 27, 53, 0.3); box-shadow: 0 8px 20px rgba(255, 27, 53, 0.2); }
@@ -131,7 +175,7 @@
                 <div class="floating">
                     <h1 class="text-4xl font-bold">✨ <span class="gradient-text">แกลเลอรีกิจกรรม</span> ✨</h1>
                     <p class="text-sm mt-1 font-medium">💕 ชมรูปสวยๆ จากกิจกรรม 📸</p>
-                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v6.2 - ปุ่มพร้อมทันที</p>
+                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v6.5 - ซูมลื่นไม่สั่น</p>
                 </div>
                 <div class="flex gap-2">
                     <button id="adminBtn" onclick="toggleAdmin()" class="btn-primary">🔐 Admin</button>
@@ -152,6 +196,16 @@
         <div id="imagesView" class="hidden space-y-8">
             <button onclick="backToGallery()" class="btn-primary mb-4">← กลับ</button>
             <div id="imagesContent"></div>
+        </div>
+
+        <!-- ปุ่มลอยด้านล่าง (เลือกหลายรูป) -->
+        <div id="floatingBar" class="hidden-bar">
+            <div class="float-inner">
+                <span id="floatCount" class="font-bold text-sm px-2">0 รูป</span>
+                <button onclick="downloadSelected()" class="float-btn">⬇️ ดาวน์โหลด</button>
+                <button onclick="shareSelected()" class="float-btn">📤 แชร์</button>
+                <button onclick="clearSelection()" class="float-btn" style="padding:10px 14px;">✕</button>
+            </div>
         </div>
 
         <!-- Admin -->
@@ -205,7 +259,7 @@
 
         <!-- พื้นที่แสดงภาพ -->
         <div id="zoomContainer" class="w-full h-full flex items-center justify-center overflow-hidden" style="cursor: grab;">
-            <img id="modalImage" src="" alt="" class="select-none" style="max-width: 90%; max-height: 80vh; transform-origin: center; transition: transform 0.1s ease-out; will-change: transform;" draggable="false">
+            <img id="modalImage" src="" alt="" class="select-none" style="max-width: 90%; max-height: 80vh; transform-origin: center; will-change: transform;" draggable="false">
         </div>
 
         <!-- แถบล่าง: บันทึก + สถานะ -->
@@ -386,18 +440,25 @@
             const meta = ZONE_META[zoneId];
             const sub = driveData[zoneId].subfolders[subId];
             const iconClass = getIconClass(zoneId);
+            clearSelection(); // เคลียร์รูปที่เลือกไว้
 
             let html = `
                 <div class="card mb-8">
                     <h2 class="text-3xl font-bold gradient-text"><span class="${iconClass}">${meta.icon}</span> ${sub.name}</h2>
                     <p class="text-gray-500 mt-2">${meta.name} • ${sub.images ? sub.images.length : 0} รูป</p>
+                    <p class="text-xs text-gray-400 mt-1">💡 ติ๊ก ☑ มุมขวาบนเพื่อเลือกหลายรูป</p>
                 </div>`;
 
             if (sub.images && sub.images.length > 0) {
                 html += `<div class="grid grid-cols-2 md:grid-cols-4 gap-4">`;
                 sub.images.forEach(img => {
-                    html += `<div class="image-card" onclick="openModal('${img.src}', '${img.name}', '${img.id}')">
-                        <img src="${img.src}" alt="${img.name}" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/200?text=Loading'"></div>`;
+                    const imgJson = JSON.stringify({ id: img.id, name: img.name, src: img.src }).replace(/"/g, '&quot;');
+                    html += `<div class="card-wrap" id="wrap_${img.id}">
+                        <input type="checkbox" class="sel-check" onchange="toggleSelect('${img.id}', this, ${imgJson})">
+                        <div class="image-card" onclick="openModal('${img.src}', '${img.name}', '${img.id}')">
+                            <img src="${img.src}" alt="${img.name}" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/200?text=Loading'">
+                        </div>
+                    </div>`;
                 });
                 html += `</div>`;
             } else {
@@ -410,8 +471,43 @@
             window.scrollTo(0, 0);
         }
         function backToGallery() {
+            clearSelection();
             document.getElementById('imagesView').classList.add('hidden');
             document.getElementById('galleryView').classList.remove('hidden');
+        }
+
+        // ========== เลือกหลายรูป ==========
+        let selectedImages = {};
+
+        function toggleSelect(imgId, checkbox, imgData) {
+            const wrap = document.getElementById('wrap_' + imgId);
+            if (checkbox.checked) {
+                selectedImages[imgId] = imgData;
+                if (wrap) wrap.classList.add('selected');
+            } else {
+                delete selectedImages[imgId];
+                if (wrap) wrap.classList.remove('selected');
+            }
+            updateFloatingBar();
+        }
+
+        function updateFloatingBar() {
+            const count = Object.keys(selectedImages).length;
+            const bar = document.getElementById('floatingBar');
+            if (count >= 1) {
+                bar.classList.remove('hidden-bar');
+                document.getElementById('floatCount').textContent = count + ' รูป';
+            } else {
+                bar.classList.add('hidden-bar');
+            }
+        }
+
+        function clearSelection() {
+            selectedImages = {};
+            document.querySelectorAll('.sel-check').forEach(c => c.checked = false);
+            document.querySelectorAll('.card-wrap.selected').forEach(w => w.classList.remove('selected'));
+            const bar = document.getElementById('floatingBar');
+            if (bar) bar.classList.add('hidden-bar');
         }
 
         // ========== Admin ==========
@@ -578,21 +674,23 @@
         let isDragging = false, dragStartX = 0, dragStartY = 0;
         let lastTouchDist = 0;
 
-        function applyTransform() {
+        // applyTransform: smooth=true ใช้ transition (ตอนกดปุ่ม/ดับเบิลคลิก), false = ทันที (ตอน pinch/wheel/drag)
+        function applyTransform(smooth) {
             const img = document.getElementById('modalImage');
+            img.style.transition = smooth ? 'transform 0.25s ease-out' : 'none';
             img.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`;
             document.getElementById('zoomContainer').style.cursor = zoomScale > 1 ? 'grab' : 'default';
         }
 
         function resetZoom() {
             zoomScale = 1; panX = 0; panY = 0;
-            applyTransform();
+            applyTransform(true);
         }
 
         function zoomStep(delta) {
             zoomScale = Math.min(Math.max(zoomScale + delta, 1), 5);
             if (zoomScale === 1) { panX = 0; panY = 0; }
-            applyTransform();
+            applyTransform(true);
         }
 
         function openModal(url, name, fileId) {
@@ -647,11 +745,11 @@
                 applyTransform();
             }, { passive: false });
 
-            // ดับเบิลคลิก = ซูมเข้า/ออก
+            // ดับเบิลคลิก = ซูมเข้า/ออก (smooth)
             img.addEventListener('dblclick', () => {
                 zoomScale = zoomScale > 1 ? 1 : 2.5;
                 if (zoomScale === 1) { panX = 0; panY = 0; }
-                applyTransform();
+                applyTransform(true);
             });
 
             // เมาส์ลาก = เลื่อน
@@ -753,91 +851,230 @@
             };
         }
 
-        // ===== ปุ่มดาวน์โหลด → บันทึกไฟล์ลงเครื่อง (เลือกวิธีตามเครื่อง) =====
-        async function downloadImage() {
-            if (!currentFileId) { alert('⚠️ ไม่พบไฟล์'); return; }
+        // ดาวน์โหลดไฟล์ลงเครื่อง (a.download) — ทำทันทีใน user gesture
+        function triggerDownload(blob, fileName) {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.rel = 'noopener';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(link.href), 3000);
+        }
+
+        // ทำดาวน์โหลด/แชร์ตอนที่ blob พร้อมแล้ว (เรียกใน user gesture)
+        function doSave(mode) {
             const status = document.getElementById('downloadStatus');
+            const blob = preloadedBlob;
+            const mime = preloadedMime || 'image/jpeg';
+            const fileName = preloadedName || currentFileName || 'image.jpg';
+            const file = new File([blob], fileName, { type: mime });
             const { isIOS } = detectOS();
 
+            // === โหมดแชร์ === → เมนูแชร์
+            if (mode === 'share') {
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    flyAway(document.getElementById('modalImage'));
+                    navigator.share({ files: [file], title: fileName })
+                        .then(() => status.innerHTML = '✅ แชร์สำเร็จ!')
+                        .catch(e => { if (e.name !== 'AbortError') status.innerHTML = '❌ ' + e.message; else status.innerHTML = ''; });
+                    return;
+                }
+                flyAway(document.getElementById('modalImage'));
+                triggerDownload(blob, fileName);
+                status.innerHTML = '⚠️ เครื่องนี้ไม่รองรับแชร์ — ดาวน์โหลดแทนแล้ว';
+                return;
+            }
+
+            // === โหมดดาวน์โหลด ===
+            // iOS → ใช้ share (a.download ใช้ไม่ได้บน iOS)
+            if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })) {
+                flyAway(document.getElementById('modalImage'));
+                navigator.share({ files: [file], title: fileName })
+                    .then(() => status.innerHTML = '✅ บันทึกลงรูปภาพแล้ว!')
+                    .catch(e => { if (e.name !== 'AbortError') status.innerHTML = '❌ ' + e.message; else status.innerHTML = ''; });
+                return;
+            }
+            // Desktop Chrome/Edge → เลือกที่เก็บได้
+            if (window.showSaveFilePicker) {
+                savePicker(blob, mime, fileName, status);
+                return;
+            }
+            // Android/อื่นๆ → ดาวน์โหลดลงเครื่องทันที
+            flyAway(document.getElementById('modalImage'));
+            triggerDownload(blob, fileName);
+            status.innerHTML = '✅ ดาวน์โหลดแล้ว! (ดูในโฟลเดอร์ดาวน์โหลด หรือแอปรูปภาพ)';
+        }
+
+        // แอนิเมชั่นรูปย่อแล้ววิ่งออกไป (ให้ดูเหมือนบันทึก/แชร์แล้ว)
+        function flyAway(srcEl) {
+            if (!srcEl || !srcEl.src) return;
+            const rect = srcEl.getBoundingClientRect();
+            const clone = document.createElement('img');
+            clone.src = srcEl.src;
+            clone.className = 'fly-clone';
+            clone.setAttribute('referrerpolicy', 'no-referrer');
+            clone.style.left = rect.left + 'px';
+            clone.style.top = rect.top + 'px';
+            clone.style.width = rect.width + 'px';
+            clone.style.height = rect.height + 'px';
+            clone.style.opacity = '1';
+            document.body.appendChild(clone);
+
+            // force reflow
+            void clone.offsetWidth;
+
+            // ย่อแล้ววิ่งไปมุมล่างขวา (ทิศทางบันทึก) + หมุนเล็กน้อย
+            clone.style.left = (window.innerWidth - 70) + 'px';
+            clone.style.top = (window.innerHeight - 70) + 'px';
+            clone.style.width = '48px';
+            clone.style.height = '48px';
+            clone.style.opacity = '0';
+            clone.style.transform = 'rotate(20deg)';
+
+            setTimeout(() => clone.remove(), 900);
+        }
+
+        // ========== ดาวน์โหลด/แชร์ หลายรูป ==========
+        // ดึงรูปเต็มจาก Drive
+        async function fetchFullImage(fileId, fallbackName) {
+            const res = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getFile', fileId: fileId })
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error || 'โหลดรูปไม่สำเร็จ');
+            const blob = base64ToBlob(json.base64, json.mimeType);
+            const name = json.name || fallbackName || 'image.jpg';
+            return { blob, mime: json.mimeType, name, file: new File([blob], name, { type: json.mimeType }) };
+        }
+
+        async function downloadSelected() {
+            const imgs = Object.values(selectedImages);
+            if (imgs.length === 0) return;
+            const bar = document.getElementById('floatCount');
+            const { isIOS } = detectOS();
+
+            // แอนิเมชั่นรูปที่เลือกวิ่งออก
+            imgs.forEach(img => {
+                const wrap = document.getElementById('wrap_' + img.id);
+                if (wrap) flyAway(wrap.querySelector('img'));
+            });
+
+            let done = 0;
+            for (const img of imgs) {
+                bar.textContent = `กำลังโหลด ${done + 1}/${imgs.length}...`;
+                try {
+                    const { blob, file, name } = await fetchFullImage(img.id, img.name);
+                    // iOS → เก็บไว้ share รวม (ทำด้านล่าง), Android/PC → ดาวน์โหลดทีละไฟล์
+                    if (!isIOS) {
+                        triggerDownload(blob, name);
+                        await new Promise(r => setTimeout(r, 400)); // เว้นช่วงกันบล็อก
+                    } else {
+                        img._file = file;
+                    }
+                    done++;
+                } catch (e) { console.error(e); }
+            }
+
+            // iOS → แชร์รวมทีเดียว (บันทึกลงรูปภาพ)
+            if (isIOS) {
+                const files = imgs.map(i => i._file).filter(Boolean);
+                if (files.length && navigator.canShare && navigator.canShare({ files })) {
+                    try { await navigator.share({ files, title: 'รูปกิจกรรม' }); } catch (e) {}
+                }
+            }
+
+            bar.textContent = `✅ ${done} รูป`;
+            setTimeout(() => { clearSelection(); }, 1200);
+        }
+
+        async function shareSelected() {
+            const imgs = Object.values(selectedImages);
+            if (imgs.length === 0) return;
+            const bar = document.getElementById('floatCount');
+
+            imgs.forEach(img => {
+                const wrap = document.getElementById('wrap_' + img.id);
+                if (wrap) flyAway(wrap.querySelector('img'));
+            });
+
+            const files = [];
+            let done = 0;
+            for (const img of imgs) {
+                bar.textContent = `กำลังโหลด ${done + 1}/${imgs.length}...`;
+                try {
+                    const { file } = await fetchFullImage(img.id, img.name);
+                    files.push(file);
+                    done++;
+                } catch (e) { console.error(e); }
+            }
+
+            if (files.length && navigator.canShare && navigator.canShare({ files })) {
+                try {
+                    await navigator.share({ files, title: 'รูปกิจกรรม' });
+                    bar.textContent = `✅ แชร์ ${files.length} รูป`;
+                } catch (e) {
+                    bar.textContent = files.length + ' รูป';
+                }
+            } else {
+                // ไม่รองรับแชร์หลายรูป → ดาวน์โหลดแทน
+                for (const img of imgs) {
+                    try {
+                        const { blob, name } = await fetchFullImage(img.id, img.name);
+                        triggerDownload(blob, name);
+                        await new Promise(r => setTimeout(r, 400));
+                    } catch (e) {}
+                }
+                bar.textContent = '✅ ดาวน์โหลดแทนแล้ว';
+            }
+            setTimeout(() => { clearSelection(); }, 1200);
+        }
+
+        // Desktop: เลือกที่เก็บไฟล์
+        async function savePicker(blob, mime, fileName, status) {
             try {
-                const { blob, mime, fileName, file } = await ensureReadyFile(status);
-
-                // ── iOS → Web Share (a.download ใช้ไม่ได้บน iOS) ──
-                if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({ files: [file], title: fileName });
-                        status.innerHTML = '✅ บันทึกลงรูปภาพแล้ว!';
-                        return;
-                    } catch (e) {
-                        if (e.name === 'AbortError') { status.innerHTML = ''; return; }
-                    }
-                }
-
-                // ── Desktop Chrome/Edge → เลือกที่เก็บไฟล์ได้ ──
-                if (window.showSaveFilePicker) {
-                    try {
-                        const ext = fileName.includes('.') ? fileName.split('.').pop() : 'jpg';
-                        const handle = await window.showSaveFilePicker({
-                            suggestedName: fileName,
-                            types: [{ description: 'รูปภาพ', accept: { [mime]: ['.' + ext] } }]
-                        });
-                        const writable = await handle.createWritable();
-                        await writable.write(blob);
-                        await writable.close();
-                        status.innerHTML = '✅ บันทึกสำเร็จ!';
-                        return;
-                    } catch (e) {
-                        if (e.name === 'AbortError') { status.innerHTML = ''; return; }
-                    }
-                }
-
-                // ── Android/เบราว์เซอร์อื่น → ดาวน์โหลดลงเครื่องตรงๆ ──
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = fileName;
-                link.rel = 'noopener';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                setTimeout(() => URL.revokeObjectURL(link.href), 3000);
-                status.innerHTML = '✅ ดาวน์โหลดแล้ว! (ดูในโฟลเดอร์ดาวน์โหลด หรือแอปรูปภาพ)';
-            } catch (err) {
-                status.innerHTML = '❌ ' + err.message;
+                const ext = fileName.includes('.') ? fileName.split('.').pop() : 'jpg';
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: fileName,
+                    types: [{ description: 'รูปภาพ', accept: { [mime]: ['.' + ext] } }]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+                status.innerHTML = '✅ บันทึกสำเร็จ!';
+            } catch (e) {
+                if (e.name === 'AbortError') { status.innerHTML = ''; return; }
+                triggerDownload(blob, fileName);
+                status.innerHTML = '✅ ดาวน์โหลดแล้ว!';
             }
         }
 
-        // ===== ปุ่มแชร์ → เมนูแชร์ (เลือกแอป / บันทึกลงรูปภาพ) =====
-        async function shareImage() {
+        // ===== ปุ่มดาวน์โหลด =====
+        function downloadImage() {
             if (!currentFileId) { alert('⚠️ ไม่พบไฟล์'); return; }
             const status = document.getElementById('downloadStatus');
+            // ถ้ารูปพร้อมแล้ว → ทำทันที (สิทธิ์กดปุ่มยังอยู่)
+            if (preloadedBlob) { doSave('download'); return; }
+            // ถ้ายังไม่พร้อม → รอโหลดก่อน
+            status.innerHTML = '<div class="spinner"></div> กำลังเตรียมรูป...';
+            (preloadPromise || Promise.resolve()).then(() => {
+                if (preloadedBlob) doSave('download');
+                else status.innerHTML = '❌ โหลดรูปไม่สำเร็จ ลองใหม่';
+            });
+        }
 
-            try {
-                const { blob, fileName, file } = await ensureReadyFile(status);
-
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({ files: [file], title: fileName });
-                        status.innerHTML = '✅ แชร์สำเร็จ!';
-                        return;
-                    } catch (e) {
-                        if (e.name === 'AbortError') { status.innerHTML = ''; return; }
-                        status.innerHTML = '❌ แชร์ไม่สำเร็จ: ' + e.message;
-                        return;
-                    }
-                }
-
-                // ถ้าไม่รองรับแชร์ → ดาวน์โหลดแทน
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = fileName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                setTimeout(() => URL.revokeObjectURL(link.href), 3000);
-                status.innerHTML = '⚠️ เครื่องนี้ไม่รองรับแชร์ — ดาวน์โหลดแทนแล้ว';
-            } catch (err) {
-                status.innerHTML = '❌ ' + err.message;
-            }
+        // ===== ปุ่มแชร์ =====
+        function shareImage() {
+            if (!currentFileId) { alert('⚠️ ไม่พบไฟล์'); return; }
+            const status = document.getElementById('downloadStatus');
+            if (preloadedBlob) { doSave('share'); return; }
+            status.innerHTML = '<div class="spinner"></div> กำลังเตรียมรูป...';
+            (preloadPromise || Promise.resolve()).then(() => {
+                if (preloadedBlob) doSave('share');
+                else status.innerHTML = '❌ โหลดรูปไม่สำเร็จ ลองใหม่';
+            });
         }
     </script>
 </body>
