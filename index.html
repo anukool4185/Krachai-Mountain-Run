@@ -178,13 +178,29 @@
     </main>
 
     <!-- Image Modal -->
-    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl max-w-2xl w-full relative">
-            <button onclick="closeModal()" class="absolute top-2 right-2 text-3xl font-bold">✕</button>
-            <img id="modalImage" src="" alt="" class="w-full h-auto rounded-t-2xl">
-            <div class="p-4 flex gap-2">
-                <a id="downloadBtn" target="_blank" class="flex-1 btn-primary text-center">⬇️ เปิด/บันทึก</a>
-                <button onclick="closeModal()" class="flex-1 bg-gray-300 text-gray-800 py-3 rounded-lg font-bold">ปิด</button>
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden" style="touch-action: none;">
+        <!-- ปุ่มควบคุมด้านบน -->
+        <div class="absolute top-4 right-4 z-20 flex gap-2">
+            <button onclick="zoomStep(0.3)" class="bg-white/20 hover:bg-white/40 text-white rounded-full w-12 h-12 text-2xl font-bold backdrop-blur">➕</button>
+            <button onclick="zoomStep(-0.3)" class="bg-white/20 hover:bg-white/40 text-white rounded-full w-12 h-12 text-2xl font-bold backdrop-blur">➖</button>
+            <button onclick="resetZoom()" class="bg-white/20 hover:bg-white/40 text-white rounded-full w-12 h-12 text-xl backdrop-blur">🔄</button>
+            <button onclick="closeModal()" class="bg-white/20 hover:bg-white/40 text-white rounded-full w-12 h-12 text-2xl font-bold backdrop-blur">✕</button>
+        </div>
+
+        <!-- พื้นที่แสดงภาพ -->
+        <div id="zoomContainer" class="w-full h-full flex items-center justify-center overflow-hidden" style="cursor: grab;">
+            <img id="modalImage" src="" alt="" class="select-none" style="max-width: 90%; max-height: 80vh; transform-origin: center; transition: transform 0.1s ease-out; will-change: transform;" draggable="false">
+        </div>
+
+        <!-- แถบล่าง: บันทึก + สถานะ -->
+        <div class="absolute bottom-0 left-0 right-0 z-20 p-4 bg-gradient-to-t from-black/70 to-transparent">
+            <div class="max-w-md mx-auto flex flex-col items-center gap-2">
+                <div id="downloadStatus" class="text-center text-sm text-white"></div>
+                <div class="flex gap-2 w-full">
+                    <button id="downloadBtn" onclick="downloadImage()" class="flex-1 btn-primary text-center">⬇️ บันทึกรูป</button>
+                    <button onclick="closeModal()" class="flex-1 bg-white/30 hover:bg-white/50 text-white py-3 rounded-lg font-bold backdrop-blur">ปิด</button>
+                </div>
+                <p class="text-xs text-white/60">💡 หมุนล้อเมาส์เพื่อซูม • ลากเพื่อเลื่อน • บนมือถือใช้สองนิ้ว</p>
             </div>
         </div>
     </div>
@@ -214,6 +230,7 @@
 
         window.onload = () => {
             initTheme();
+            setupZoomPan();
             loadFromDrive();
         };
 
@@ -317,7 +334,7 @@
             if (sub.images && sub.images.length > 0) {
                 html += `<div class="grid grid-cols-2 md:grid-cols-4 gap-4">`;
                 sub.images.forEach(img => {
-                    html += `<div class="image-card" onclick="openModal('${img.src}', '${img.name}')">
+                    html += `<div class="image-card" onclick="openModal('${img.src}', '${img.name}', '${img.id}')">
                         <img src="${img.src}" alt="${img.name}" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/200?text=Loading'"></div>`;
                 });
                 html += `</div>`;
@@ -490,13 +507,190 @@
         }
 
         // ========== Modal ==========
-        function openModal(url, name) {
+        let currentFileId = null, currentFileName = null;
+
+        // สถานะซูม/เลื่อน
+        let zoomScale = 1, panX = 0, panY = 0;
+        let isDragging = false, dragStartX = 0, dragStartY = 0;
+        let lastTouchDist = 0;
+
+        function applyTransform() {
+            const img = document.getElementById('modalImage');
+            img.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`;
+            document.getElementById('zoomContainer').style.cursor = zoomScale > 1 ? 'grab' : 'default';
+        }
+
+        function resetZoom() {
+            zoomScale = 1; panX = 0; panY = 0;
+            applyTransform();
+        }
+
+        function zoomStep(delta) {
+            zoomScale = Math.min(Math.max(zoomScale + delta, 1), 5);
+            if (zoomScale === 1) { panX = 0; panY = 0; }
+            applyTransform();
+        }
+
+        function openModal(url, name, fileId) {
+            currentFileId = fileId;
+            currentFileName = name;
+            resetZoom();
             document.getElementById('modalImage').src = url;
             document.getElementById('modalImage').setAttribute('referrerpolicy', 'no-referrer');
-            document.getElementById('downloadBtn').href = url;
+            document.getElementById('downloadStatus').innerHTML = '';
             document.getElementById('imageModal').classList.remove('hidden');
         }
-        function closeModal() { document.getElementById('imageModal').classList.add('hidden'); }
+        function closeModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+            resetZoom();
+        }
+
+        // ---- ตั้งค่า event listener สำหรับซูม/เลื่อน ----
+        function setupZoomPan() {
+            const container = document.getElementById('zoomContainer');
+            const img = document.getElementById('modalImage');
+
+            // หมุนล้อเมาส์ = ซูม
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY < 0 ? 0.2 : -0.2;
+                zoomScale = Math.min(Math.max(zoomScale + delta, 1), 5);
+                if (zoomScale === 1) { panX = 0; panY = 0; }
+                applyTransform();
+            }, { passive: false });
+
+            // ดับเบิลคลิก = ซูมเข้า/ออก
+            img.addEventListener('dblclick', () => {
+                zoomScale = zoomScale > 1 ? 1 : 2.5;
+                if (zoomScale === 1) { panX = 0; panY = 0; }
+                applyTransform();
+            });
+
+            // เมาส์ลาก = เลื่อน
+            container.addEventListener('mousedown', (e) => {
+                if (zoomScale <= 1) return;
+                isDragging = true;
+                dragStartX = e.clientX - panX;
+                dragStartY = e.clientY - panY;
+                container.style.cursor = 'grabbing';
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                panX = e.clientX - dragStartX;
+                panY = e.clientY - dragStartY;
+                applyTransform();
+            });
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+                if (zoomScale > 1) container.style.cursor = 'grab';
+            });
+
+            // ---- Touch (มือถือ) ----
+            container.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    // pinch เริ่ม
+                    lastTouchDist = getTouchDist(e.touches);
+                } else if (e.touches.length === 1 && zoomScale > 1) {
+                    // เลื่อนด้วยนิ้วเดียว
+                    isDragging = true;
+                    dragStartX = e.touches[0].clientX - panX;
+                    dragStartY = e.touches[0].clientY - panY;
+                }
+            }, { passive: false });
+
+            container.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (e.touches.length === 2) {
+                    // pinch zoom
+                    const dist = getTouchDist(e.touches);
+                    if (lastTouchDist > 0) {
+                        const ratio = dist / lastTouchDist;
+                        zoomScale = Math.min(Math.max(zoomScale * ratio, 1), 5);
+                        if (zoomScale === 1) { panX = 0; panY = 0; }
+                        applyTransform();
+                    }
+                    lastTouchDist = dist;
+                } else if (e.touches.length === 1 && isDragging) {
+                    // เลื่อน
+                    panX = e.touches[0].clientX - dragStartX;
+                    panY = e.touches[0].clientY - dragStartY;
+                    applyTransform();
+                }
+            }, { passive: false });
+
+            container.addEventListener('touchend', (e) => {
+                if (e.touches.length < 2) lastTouchDist = 0;
+                if (e.touches.length === 0) isDragging = false;
+            });
+        }
+
+        function getTouchDist(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // แปลง base64 → Blob
+        function base64ToBlob(base64, mimeType) {
+            const bytes = atob(base64);
+            const arr = new Uint8Array(bytes.length);
+            for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+            return new Blob([arr], { type: mimeType });
+        }
+
+        async function downloadImage() {
+            if (!currentFileId) { alert('⚠️ ไม่พบไฟล์'); return; }
+            const status = document.getElementById('downloadStatus');
+            const btn = document.getElementById('downloadBtn');
+            btn.disabled = true;
+            status.innerHTML = '<div class="spinner"></div> กำลังเตรียมไฟล์...';
+
+            try {
+                // ดึงรูปเต็มความละเอียดจาก Drive ผ่าน Apps Script
+                const res = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'getFile', fileId: currentFileId })
+                });
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || 'ดาวน์โหลดไม่สำเร็จ');
+
+                const blob = base64ToBlob(json.base64, json.mimeType);
+                const fileName = json.name || currentFileName || 'image.jpg';
+
+                // วิธีที่ 1: File System Access API (เลือกที่เก็บได้) — Chrome/Edge
+                if (window.showSaveFilePicker) {
+                    try {
+                        const ext = fileName.includes('.') ? fileName.split('.').pop() : 'jpg';
+                        const handle = await window.showSaveFilePicker({
+                            suggestedName: fileName,
+                            types: [{ description: 'รูปภาพ', accept: { [json.mimeType]: ['.' + ext] } }]
+                        });
+                        const writable = await handle.createWritable();
+                        await writable.write(blob);
+                        await writable.close();
+                        status.innerHTML = '✅ บันทึกสำเร็จ!';
+                        btn.disabled = false;
+                        return;
+                    } catch (e) {
+                        if (e.name === 'AbortError') { status.innerHTML = ''; btn.disabled = false; return; }
+                        // ถ้า picker ล้มเหลว → ใช้วิธีที่ 2
+                    }
+                }
+
+                // วิธีที่ 2: ดาวน์โหลดปกติ (ลงโฟลเดอร์ Downloads)
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+                status.innerHTML = '✅ บันทึกลงโฟลเดอร์ Downloads แล้ว!';
+            } catch (err) {
+                status.innerHTML = '❌ ' + err.message;
+            }
+            btn.disabled = false;
+        }
     </script>
 </body>
 </html>
