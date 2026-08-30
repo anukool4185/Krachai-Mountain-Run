@@ -30,15 +30,8 @@
             backdrop-filter: blur(10px);
             border: 2px solid rgba(255, 255, 255, 0.4);
         }
-
-        .theme-pastel .glass-effect {
-            background: rgba(255, 255, 255, 0.7);
-        }
-
-        .theme-dark .glass-effect {
-            background: rgba(20, 20, 20, 0.8);
-            border-color: rgba(255, 27, 53, 0.3);
-        }
+        .theme-pastel .glass-effect { background: rgba(255, 255, 255, 0.7); }
+        .theme-dark .glass-effect { background: rgba(20, 20, 20, 0.8); border-color: rgba(255, 27, 53, 0.3); }
 
         .gradient-text {
             background: linear-gradient(135deg, #ec4899, #8b5cf6, #06b6d4);
@@ -46,7 +39,6 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-
         .theme-dark .gradient-text {
             background: linear-gradient(135deg, #ff1b35, #ff6b9d, #ffd60a);
             -webkit-background-clip: text;
@@ -60,12 +52,10 @@
             padding: 24px;
             border: 2px solid rgba(255, 255, 255, 0.3);
         }
-
         .theme-pastel .card {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(254, 243, 199, 0.4));
             box-shadow: 0 10px 30px rgba(236, 72, 153, 0.15);
         }
-
         .theme-dark .card {
             background: linear-gradient(135deg, rgba(25, 25, 25, 0.9), rgba(35, 35, 35, 0.6));
             box-shadow: 0 10px 30px rgba(255, 27, 53, 0.2);
@@ -80,15 +70,8 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
-
-        .theme-pastel .btn-primary {
-            background: linear-gradient(135deg, #f472b6, #c084fc);
-        }
-
-        .theme-dark .btn-primary {
-            background: linear-gradient(135deg, #ff1b35, #ff4757);
-        }
-
+        .theme-pastel .btn-primary { background: linear-gradient(135deg, #f472b6, #c084fc); }
+        .theme-dark .btn-primary { background: linear-gradient(135deg, #ff1b35, #ff4757); }
         .btn-primary:hover { transform: translateY(-2px); }
 
         .image-card {
@@ -99,67 +82,53 @@
             border: 3px solid rgba(255, 255, 255, 0.6);
             height: 200px;
         }
+        .theme-pastel .image-card { box-shadow: 0 8px 20px rgba(236, 72, 153, 0.15); }
+        .theme-dark .image-card { box-shadow: 0 8px 20px rgba(255, 27, 53, 0.3); border-color: rgba(255, 27, 53, 0.3); }
+        .image-card:hover { transform: translateY(-12px) scale(1.02); }
+        .image-card img { width: 100%; height: 100%; object-fit: cover; }
 
-        .theme-pastel .image-card {
+        .subfolder-card {
+            cursor: pointer;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(236, 72, 153, 0.3);
+        }
+        .theme-pastel .subfolder-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(252, 231, 243, 0.6));
             box-shadow: 0 8px 20px rgba(236, 72, 153, 0.15);
         }
-
-        .theme-dark .image-card {
-            box-shadow: 0 8px 20px rgba(255, 27, 53, 0.3);
+        .theme-dark .subfolder-card {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.95), rgba(40, 30, 35, 0.6));
             border-color: rgba(255, 27, 53, 0.3);
+            box-shadow: 0 8px 20px rgba(255, 27, 53, 0.2);
         }
-
-        .image-card:hover {
-            transform: translateY(-12px) scale(1.02);
+        .subfolder-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            border-color: rgba(236, 72, 153, 1);
         }
+        .theme-dark .subfolder-card:hover { border-color: rgba(255, 27, 53, 1); }
 
-        .image-card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .floating {
-            animation: floating 3s ease-in-out infinite;
-        }
-
+        .floating { animation: floating 3s ease-in-out infinite; }
         @keyframes floating {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-15px); }
         }
 
-        .icon-bright {
-            display: inline-block;
-            font-size: 2.5rem;
-            animation: bounce 2s ease-in-out infinite;
-            filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.6));
-        }
-
-        .icon-creative {
-            display: inline-block;
-            font-size: 2.5rem;
-            animation: spin 3s linear infinite;
-            filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6));
-        }
-
-        .icon-competition {
-            display: inline-block;
-            font-size: 2.5rem;
-            animation: pulse 2s ease-in-out infinite;
-            filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.6));
-        }
+        .icon-bright { display: inline-block; font-size: 2.5rem; animation: bounce 2s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.6)); }
+        .icon-creative { display: inline-block; font-size: 2.5rem; animation: spin 3s linear infinite; filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6)); }
+        .icon-competition { display: inline-block; font-size: 2.5rem; animation: pulse 2s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.6)); }
 
         @keyframes bounce {
             0%, 100% { transform: translateY(0) scale(1); }
             50% { transform: translateY(-15px) scale(1.2); }
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg) scale(1); }
             50% { transform: rotate(180deg) scale(1.1); }
             100% { transform: rotate(360deg) scale(1); }
         }
-
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.2); }
@@ -173,61 +142,43 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
+        .theme-pastel .upload-area:hover { border-color: rgba(236, 72, 153, 1); background: rgba(236, 72, 153, 0.05); }
+        .theme-dark .upload-area { border-color: rgba(255, 27, 53, 0.5); }
+        .theme-dark .upload-area:hover { border-color: rgba(255, 27, 53, 1); background: rgba(255, 27, 53, 0.05); }
 
-        .theme-pastel .upload-area:hover {
-            border-color: rgba(236, 72, 153, 1);
-            background: rgba(236, 72, 153, 0.05);
-        }
-
-        .theme-dark .upload-area {
-            border-color: rgba(255, 27, 53, 0.5);
-        }
-
-        .theme-dark .upload-area:hover {
-            border-color: rgba(255, 27, 53, 1);
-            background: rgba(255, 27, 53, 0.05);
-        }
-
-        .folder-btn {
-            padding: 12px;
+        .zone-btn {
+            padding: 12px 20px;
             border-radius: 12px;
-            margin: 8px;
+            margin: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
+        .theme-pastel .zone-btn { border: 2px solid rgba(236, 72, 153, 0.3); }
+        .theme-pastel .zone-btn:hover { transform: translateY(-2px); border-color: rgba(236, 72, 153, 1); }
+        .theme-pastel .zone-btn.active { background: rgba(236, 72, 153, 0.2); border-color: rgba(236, 72, 153, 1); font-weight: bold; }
+        .theme-dark .zone-btn { border: 2px solid rgba(255, 27, 53, 0.3); }
+        .theme-dark .zone-btn:hover { transform: translateY(-2px); border-color: rgba(255, 27, 53, 1); }
+        .theme-dark .zone-btn.active { background: rgba(255, 27, 53, 0.2); border-color: rgba(255, 27, 53, 1); font-weight: bold; }
 
-        .theme-pastel .folder-btn {
-            border: 2px solid rgba(236, 72, 153, 0.3);
+        .sub-item {
+            padding: 12px;
+            border-radius: 12px;
+            margin: 6px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-
-        .theme-pastel .folder-btn:hover {
-            transform: translateY(-2px);
-            border-color: rgba(236, 72, 153, 1);
-        }
-
-        .theme-pastel .folder-btn.active {
-            background: rgba(236, 72, 153, 0.2);
-            border-color: rgba(236, 72, 153, 1);
-            font-weight: bold;
-        }
-
-        .theme-dark .folder-btn {
-            border: 2px solid rgba(255, 27, 53, 0.3);
-        }
-
-        .theme-dark .folder-btn:hover {
-            transform: translateY(-2px);
-            border-color: rgba(255, 27, 53, 1);
-        }
-
-        .theme-dark .folder-btn.active {
-            background: rgba(255, 27, 53, 0.2);
-            border-color: rgba(255, 27, 53, 1);
-            font-weight: bold;
-        }
+        .theme-pastel .sub-item { border: 2px solid rgba(168, 85, 247, 0.3); }
+        .theme-pastel .sub-item:hover { border-color: rgba(168, 85, 247, 1); background: rgba(168, 85, 247, 0.05); }
+        .theme-pastel .sub-item.active { background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 1); }
+        .theme-dark .sub-item { border: 2px solid rgba(255, 100, 130, 0.3); }
+        .theme-dark .sub-item:hover { border-color: rgba(255, 100, 130, 1); background: rgba(255, 100, 130, 0.08); }
+        .theme-dark .sub-item.active { background: rgba(255, 100, 130, 0.15); border-color: rgba(255, 100, 130, 1); }
     </style>
 </head>
-<body>
+<body class="theme-pastel">
     <!-- Header -->
     <header class="sticky top-0 z-40 glass-effect shadow-lg">
         <div class="max-w-7xl mx-auto px-4 py-6">
@@ -235,9 +186,8 @@
                 <div class="floating">
                     <h1 class="text-4xl font-bold">✨ <span class="gradient-text">แกลเลอรีกิจกรรม</span> ✨</h1>
                     <p class="text-sm mt-1 font-medium">💕 ชมรูปสวยๆ จากกิจกรรม 📸</p>
-                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">📦 v3.1 Final</p>
+                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">📦 v4.0 - กิจกรรมย่อย</p>
                 </div>
-                
                 <div class="flex gap-2">
                     <button id="adminBtn" onclick="toggleAdmin()" class="btn-primary">🔐 Admin</button>
                     <button onclick="toggleTheme()" class="btn-primary">🌓</button>
@@ -248,13 +198,13 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-12">
-        <!-- Gallery View -->
-        <div id="galleryView" class="space-y-8">
-            <div class="card text-center">
-                <h2 class="text-2xl font-bold gradient-text mb-4">📸 แกลเลอรีกิจกรรม</h2>
-                <p class="mb-4">👤 ยังไม่มีรูปภาพ</p>
-                <p class="text-sm text-gray-500">เข้า Admin เพื่ออัพโหลดรูป</p>
-            </div>
+        <!-- Gallery View (หน้าหลัก) -->
+        <div id="galleryView" class="space-y-8"></div>
+
+        <!-- Subfolder Images View (ดูรูปในกิจกรรมย่อย) -->
+        <div id="imagesView" class="hidden space-y-8">
+            <button onclick="backToGallery()" class="btn-primary mb-4">← กลับ</button>
+            <div id="imagesContent"></div>
         </div>
 
         <!-- Admin Panel -->
@@ -264,25 +214,33 @@
                 <button onclick="toggleAdmin()" class="btn-primary">← ออก</button>
             </div>
 
-            <!-- โฟลเดอร์หลัก (ไม่สามารถแก้ไขได้) -->
+            <!-- เลือกโซนหลัก -->
             <div class="card">
-                <h3 class="text-2xl font-bold gradient-text mb-4">📁 โฟลเดอร์</h3>
-                <div id="foldersList" class="flex flex-wrap gap-2"></div>
+                <h3 class="text-2xl font-bold gradient-text mb-4">1️⃣ เลือกโซนกิจกรรม</h3>
+                <div id="zonesList" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <!-- จัดการกิจกรรมย่อย -->
+            <div id="subManageSection" class="card hidden">
+                <h3 class="text-2xl font-bold gradient-text mb-4">2️⃣ กิจกรรมย่อยใน <span id="currentZoneName"></span></h3>
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="newSubName" placeholder="ชื่อกิจกรรมย่อย เช่น วิ่งเขากระชาย" class="flex-1 px-4 py-2 border-2 rounded-xl" style="border-color: rgba(168, 85, 247, 0.5);">
+                    <button onclick="createSubfolder()" class="btn-primary">➕ สร้าง</button>
+                </div>
+                <div id="subfoldersList"></div>
             </div>
 
             <!-- อัพโหลดรูป -->
-            <div class="card">
-                <h3 class="text-2xl font-bold gradient-text mb-4">📸 อัพโหลดรูป</h3>
-                
+            <div id="uploadSection" class="card hidden">
+                <h3 class="text-2xl font-bold gradient-text mb-4">3️⃣ อัพโหลดรูปใน <span id="currentSubName"></span></h3>
                 <div class="upload-area" ondrop="handleDrop(event)" ondragover="event.preventDefault()">
                     <p class="text-4xl mb-2">📤</p>
                     <p class="text-lg font-bold">ลากรูปมาที่นี่ หรือ คลิก</p>
                     <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFileSelect(event)" style="display: none;">
-                    <input type="text" placeholder="หรือใส่ URL รูปภาพ" id="imageUrl" class="mt-4 w-full px-4 py-2 border-2 rounded-xl" style="border-color: rgba(236, 72, 153, 0.5);" onfocus="this.style.borderColor='rgba(236, 72, 153, 1)'" onblur="this.style.borderColor='rgba(236, 72, 153, 0.5)'">
+                    <input type="text" placeholder="หรือใส่ URL รูปภาพ" id="imageUrl" class="mt-4 w-full px-4 py-2 border-2 rounded-xl" style="border-color: rgba(236, 72, 153, 0.5);">
                     <button onclick="document.getElementById('fileInput').click()" class="btn-primary mt-4">📁 เลือกรูป</button>
                     <button onclick="addImageFromUrl()" class="btn-primary mt-2">🔗 เพิ่มจาก URL</button>
                 </div>
-
                 <div id="imagePreview" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6"></div>
                 <button id="uploadBtn" onclick="uploadImages()" class="btn-primary w-full mt-4 hidden">✅ อัพโหลด</button>
             </div>
@@ -304,33 +262,113 @@
     <script>
         const ADMIN_PASSWORD = '434143';
         let isAdmin = false;
-        let currentFolder = 'bright';
-        let selectedFiles = [];
         let currentTheme = localStorage.getItem('theme') || 'pastel';
-        
-        // 3 โฟลเดอร์หลัก
-        let galleries = JSON.parse(localStorage.getItem('galleries')) || {
-            'bright': { name: '🎉 กิจกรรมวันสดใส', desc: 'กิจกรรมสนุกสำหรับวัยหนุ่มสาว เพื่อสร้างความสนิทและเสริมสร้างจิตสำนึก', icon: '🎉', images: [] },
-            'creative': { name: '🎨 กิจกรรมสร้างสรรค์', desc: 'พัฒนาทักษะและความสามารถโดยสร้างผลงานจากจินตนาการ', icon: '🎨', images: [] },
-            'competition': { name: '🏆 กิจกรรมแข่งขัน', desc: 'การแข่งขันอันสร้างสรรค์เพื่อค้นหาความแข็งแกร่ง', icon: '🏆', images: [] }
+        let currentZone = null;
+        let currentSub = null;
+        let selectedFiles = [];
+
+        // โครงสร้าง: โซนหลัก → กิจกรรมย่อย → รูป
+        let galleries = JSON.parse(localStorage.getItem('galleries_v4')) || {
+            'bright': { name: 'กิจกรรมวันสดใส', icon: '🎉', subfolders: {} },
+            'creative': { name: 'กิจกรรมสร้างสรรค์', icon: '🎨', subfolders: {} },
+            'competition': { name: 'กิจกรรมแข่งขัน', icon: '🏆', subfolders: {} }
         };
+
+        function getIconClass(zoneId) {
+            return zoneId === 'bright' ? 'icon-bright' : zoneId === 'creative' ? 'icon-creative' : 'icon-competition';
+        }
+
+        function save() {
+            localStorage.setItem('galleries_v4', JSON.stringify(galleries));
+        }
 
         window.onload = () => {
             initTheme();
             loadGallery();
-            updateFoldersList();
         };
 
-        function initTheme() {
-            document.body.className = 'theme-' + currentTheme;
-        }
-
+        function initTheme() { document.body.className = 'theme-' + currentTheme; }
         function toggleTheme() {
             currentTheme = currentTheme === 'pastel' ? 'dark' : 'pastel';
             localStorage.setItem('theme', currentTheme);
             initTheme();
         }
 
+        // ========== หน้าหลัก ==========
+        function loadGallery() {
+            let html = '';
+            Object.entries(galleries).forEach(([zoneId, zone]) => {
+                const iconClass = getIconClass(zoneId);
+                const subs = Object.entries(zone.subfolders || {});
+
+                html += `
+                    <div class="mb-16">
+                        <div class="card mb-8">
+                            <h2 class="text-3xl font-bold gradient-text"><span class="${iconClass}">${zone.icon}</span> ${zone.name}</h2>
+                            <p class="text-gray-500 mt-2">${subs.length} กิจกรรมย่อย</p>
+                        </div>
+                `;
+
+                if (subs.length > 0) {
+                    html += `<div class="grid grid-cols-1 md:grid-cols-3 gap-6">`;
+                    subs.forEach(([subId, sub]) => {
+                        const coverImg = sub.images && sub.images.length > 0 ? sub.images[0].src : '';
+                        html += `
+                            <div class="subfolder-card" onclick="viewSubfolder('${zoneId}', '${subId}')">
+                                ${coverImg ? `<img src="${coverImg}" class="w-full h-32 object-cover rounded-xl mb-3">` : `<div class="text-5xl mb-3">📂</div>`}
+                                <h3 class="text-xl font-bold gradient-text">${sub.name}</h3>
+                                <p class="text-sm text-gray-500 mt-1">${sub.images ? sub.images.length : 0} รูป</p>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                } else {
+                    html += `<div class="card text-center py-8 opacity-60"><p class="text-gray-500">📸 ยังไม่มีกิจกรรมย่อย</p></div>`;
+                }
+                html += `</div>`;
+            });
+            document.getElementById('galleryView').innerHTML = html;
+        }
+
+        // ========== ดูรูปในกิจกรรมย่อย ==========
+        function viewSubfolder(zoneId, subId) {
+            const zone = galleries[zoneId];
+            const sub = zone.subfolders[subId];
+            const iconClass = getIconClass(zoneId);
+
+            let html = `
+                <div class="card mb-8">
+                    <h2 class="text-3xl font-bold gradient-text"><span class="${iconClass}">${zone.icon}</span> ${sub.name}</h2>
+                    <p class="text-gray-500 mt-2">${zone.name} • ${sub.images ? sub.images.length : 0} รูป</p>
+                </div>
+            `;
+
+            if (sub.images && sub.images.length > 0) {
+                html += `<div class="grid grid-cols-2 md:grid-cols-4 gap-4">`;
+                sub.images.forEach(img => {
+                    html += `
+                        <div class="image-card" onclick="openModal('${img.src}', '${img.name}')">
+                            <img src="${img.src}" alt="${img.name}" onerror="this.src='https://via.placeholder.com/200?text=Error'">
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            } else {
+                html += `<div class="card text-center py-12 opacity-60"><p class="text-gray-500">📸 ยังไม่มีรูปภาพ</p></div>`;
+            }
+
+            document.getElementById('imagesContent').innerHTML = html;
+            document.getElementById('galleryView').classList.add('hidden');
+            document.getElementById('imagesView').classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function backToGallery() {
+            document.getElementById('imagesView').classList.add('hidden');
+            document.getElementById('galleryView').classList.remove('hidden');
+        }
+
+        // ========== Admin ==========
         function toggleAdmin() {
             if (!isAdmin) {
                 const password = prompt('🔐 ใส่รหัส Admin:');
@@ -338,67 +376,121 @@
                     isAdmin = true;
                     document.getElementById('adminPanel').classList.remove('hidden');
                     document.getElementById('galleryView').classList.add('hidden');
+                    document.getElementById('imagesView').classList.add('hidden');
                     document.getElementById('adminBtn').textContent = '← ออก';
+                    updateZonesList();
                     alert('✅ เข้า Admin สำเร็จ');
                 } else if (password !== null) {
                     alert('❌ รหัสไม่ถูกต้อง');
                 }
             } else {
                 isAdmin = false;
+                currentZone = null;
+                currentSub = null;
                 document.getElementById('adminPanel').classList.add('hidden');
+                document.getElementById('subManageSection').classList.add('hidden');
+                document.getElementById('uploadSection').classList.add('hidden');
                 document.getElementById('galleryView').classList.remove('hidden');
                 document.getElementById('adminBtn').textContent = '🔐 Admin';
                 loadGallery();
             }
         }
 
-        function updateFoldersList() {
-            const list = document.getElementById('foldersList');
-            list.innerHTML = Object.entries(galleries).map(([id, folder]) => {
-                let iconClass = id === 'bright' ? 'icon-bright' : id === 'creative' ? 'icon-creative' : 'icon-competition';
+        function updateZonesList() {
+            const list = document.getElementById('zonesList');
+            list.innerHTML = Object.entries(galleries).map(([zoneId, zone]) => {
+                const iconClass = getIconClass(zoneId);
                 return `
-                <div class="folder-btn ${id === currentFolder ? 'active' : ''}" onclick="selectFolder('${id}')">
-                    <span class="${iconClass}">${folder.icon}</span> ${folder.name}
-                </div>
-            `;
+                    <div class="zone-btn ${zoneId === currentZone ? 'active' : ''}" onclick="selectZone('${zoneId}')">
+                        <span class="${iconClass}">${zone.icon}</span> ${zone.name}
+                    </div>
+                `;
             }).join('');
         }
 
-        function selectFolder(id) {
-            currentFolder = id;
-            updateFoldersList();
+        function selectZone(zoneId) {
+            currentZone = zoneId;
+            currentSub = null;
+            updateZonesList();
+            document.getElementById('currentZoneName').textContent = galleries[zoneId].name;
+            document.getElementById('subManageSection').classList.remove('hidden');
+            document.getElementById('uploadSection').classList.add('hidden');
+            updateSubfoldersList();
         }
 
+        function updateSubfoldersList() {
+            const zone = galleries[currentZone];
+            const subs = Object.entries(zone.subfolders || {});
+            const list = document.getElementById('subfoldersList');
+
+            if (subs.length === 0) {
+                list.innerHTML = '<p class="text-gray-500 text-center py-4">ยังไม่มีกิจกรรมย่อย</p>';
+                return;
+            }
+
+            list.innerHTML = subs.map(([subId, sub]) => `
+                <div class="sub-item ${subId === currentSub ? 'active' : ''}" onclick="selectSub('${subId}')">
+                    <span>📂 ${sub.name} <span class="text-xs opacity-60">(${sub.images ? sub.images.length : 0} รูป)</span></span>
+                    <button onclick="event.stopPropagation(); deleteSub('${subId}')" class="text-red-500 text-xl">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        function createSubfolder() {
+            const name = document.getElementById('newSubName').value.trim();
+            if (!name) { alert('⚠️ ใส่ชื่อกิจกรรมย่อย'); return; }
+
+            const subId = 'sub_' + Date.now();
+            galleries[currentZone].subfolders[subId] = { name: name, images: [] };
+            save();
+            document.getElementById('newSubName').value = '';
+            updateSubfoldersList();
+            alert('✅ สร้างกิจกรรมย่อยสำเร็จ');
+        }
+
+        function deleteSub(subId) {
+            if (!confirm('ต้องการลบกิจกรรมย่อยนี้?')) return;
+            delete galleries[currentZone].subfolders[subId];
+            if (currentSub === subId) {
+                currentSub = null;
+                document.getElementById('uploadSection').classList.add('hidden');
+            }
+            save();
+            updateSubfoldersList();
+        }
+
+        function selectSub(subId) {
+            currentSub = subId;
+            updateSubfoldersList();
+            document.getElementById('currentSubName').textContent = galleries[currentZone].subfolders[subId].name;
+            document.getElementById('uploadSection').classList.remove('hidden');
+        }
+
+        // ========== Upload ==========
         function handleDrop(e) {
             e.preventDefault();
             handleFileSelect({ target: { files: e.dataTransfer.files } });
         }
 
         function handleFileSelect(e) {
-            const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
-            selectedFiles = files;
+            selectedFiles = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
             showPreview();
         }
 
         function addImageFromUrl() {
+            if (!currentSub) { alert('⚠️ เลือกกิจกรรมย่อยก่อน'); return; }
             const url = document.getElementById('imageUrl').value.trim();
-            if (!url) {
-                alert('⚠️ ใส่ URL รูปภาพ');
-                return;
-            }
+            if (!url) { alert('⚠️ ใส่ URL รูปภาพ'); return; }
 
-            const images = galleries[currentFolder].images || [];
-            images.push({
+            galleries[currentZone].subfolders[currentSub].images.push({
                 id: Date.now(),
                 src: url,
                 name: url.split('/').pop() || 'image.jpg'
             });
-            galleries[currentFolder].images = images;
-            localStorage.setItem('galleries', JSON.stringify(galleries));
+            save();
             document.getElementById('imageUrl').value = '';
             alert('✅ เพิ่มรูปสำเร็จ');
-            loadGallery();
-            updateFoldersList();
+            updateSubfoldersList();
         }
 
         function showPreview() {
@@ -409,10 +501,7 @@
                     <button onclick="removeFile(${index})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs font-bold">✕</button>
                 </div>
             `).join('');
-
-            if (selectedFiles.length > 0) {
-                document.getElementById('uploadBtn').classList.remove('hidden');
-            }
+            if (selectedFiles.length > 0) document.getElementById('uploadBtn').classList.remove('hidden');
         }
 
         function removeFile(index) {
@@ -421,79 +510,37 @@
         }
 
         function uploadImages() {
-            if (selectedFiles.length === 0) {
-                alert('⚠️ เลือกรูปภาพก่อน');
-                return;
-            }
+            if (!currentSub) { alert('⚠️ เลือกกิจกรรมย่อยก่อน'); return; }
+            if (selectedFiles.length === 0) { alert('⚠️ เลือกรูปภาพก่อน'); return; }
 
-            const images = galleries[currentFolder].images || [];
+            const images = galleries[currentZone].subfolders[currentSub].images;
             let uploaded = 0;
 
             selectedFiles.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    images.push({
-                        id: Date.now() + Math.random(),
-                        src: e.target.result,
-                        name: file.name
-                    });
+                    images.push({ id: Date.now() + Math.random(), src: e.target.result, name: file.name });
                     uploaded++;
-                    
                     if (uploaded === selectedFiles.length) {
-                        galleries[currentFolder].images = images;
-                        localStorage.setItem('galleries', JSON.stringify(galleries));
+                        save();
                         selectedFiles = [];
                         document.getElementById('imagePreview').innerHTML = '';
                         document.getElementById('uploadBtn').classList.add('hidden');
                         alert('✅ อัพโหลดรูปสำเร็จ');
-                        loadGallery();
-                        updateFoldersList();
+                        updateSubfoldersList();
                     }
                 };
                 reader.readAsDataURL(file);
             });
         }
 
-        function loadGallery() {
-            let html = '';
-
-            Object.entries(galleries).forEach(([id, folder]) => {
-                let iconClass = id === 'bright' ? 'icon-bright' : id === 'creative' ? 'icon-creative' : 'icon-competition';
-                html += `
-                    <div class="mb-16">
-                        <div class="card mb-8">
-                            <h2 class="text-3xl font-bold gradient-text"><span class="${iconClass}">${folder.icon}</span> ${folder.name}</h2>
-                            <p class="text-gray-600 mt-2">${folder.images.length} รูป</p>
-                        </div>
-                `;
-
-                if (folder.images && folder.images.length > 0) {
-                    html += `<div class="grid grid-cols-2 md:grid-cols-4 gap-4">`;
-                    folder.images.forEach(img => {
-                        html += `
-                            <div class="image-card" onclick="openModal('${img.src}', '${img.name}')">
-                                <img src="${img.src}" alt="${img.name}" onerror="this.src='https://via.placeholder.com/200?text=Error'">
-                            </div>
-                        `;
-                    });
-                    html += `</div>`;
-                } else {
-                    html += `<div class="card text-center py-12 opacity-60"><p class="text-gray-500">📸 ยังไม่มีรูปภาพ</p></div>`;
-                }
-
-                html += `</div>`;
-            });
-
-            document.getElementById('galleryView').innerHTML = html;
-        }
-
+        // ========== Modal ==========
         function openModal(url, name) {
             document.getElementById('modalImage').src = url;
             document.getElementById('downloadBtn').href = url;
             document.getElementById('downloadBtn').download = name;
             document.getElementById('imageModal').classList.remove('hidden');
         }
-
         function closeModal() {
             document.getElementById('imageModal').classList.add('hidden');
         }
