@@ -98,6 +98,15 @@
             height: 200px;
         }
 
+        .theme-pastel .image-card {
+            box-shadow: 0 8px 20px rgba(236, 72, 153, 0.15);
+        }
+
+        .theme-dark .image-card {
+            box-shadow: 0 8px 20px rgba(255, 27, 53, 0.3);
+            border-color: rgba(255, 27, 53, 0.3);
+        }
+
         .image-card:hover {
             transform: translateY(-12px) scale(1.02);
         }
@@ -126,9 +135,18 @@
             transition: all 0.3s ease;
         }
 
-        .upload-area:hover {
+        .theme-pastel .upload-area:hover {
             border-color: rgba(236, 72, 153, 1);
             background: rgba(236, 72, 153, 0.05);
+        }
+
+        .theme-dark .upload-area {
+            border-color: rgba(255, 27, 53, 0.5);
+        }
+
+        .theme-dark .upload-area:hover {
+            border-color: rgba(255, 27, 53, 1);
+            background: rgba(255, 27, 53, 0.05);
         }
 
         .folder-btn {
@@ -137,22 +155,40 @@
             margin: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
+        }
+
+        .theme-pastel .folder-btn {
             border: 2px solid rgba(236, 72, 153, 0.3);
         }
 
-        .folder-btn:hover {
+        .theme-pastel .folder-btn:hover {
             transform: translateY(-2px);
             border-color: rgba(236, 72, 153, 1);
         }
 
-        .folder-btn.active {
+        .theme-pastel .folder-btn.active {
             background: rgba(236, 72, 153, 0.2);
             border-color: rgba(236, 72, 153, 1);
             font-weight: bold;
         }
+
+        .theme-dark .folder-btn {
+            border: 2px solid rgba(255, 27, 53, 0.3);
+        }
+
+        .theme-dark .folder-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 27, 53, 1);
+        }
+
+        .theme-dark .folder-btn.active {
+            background: rgba(255, 27, 53, 0.2);
+            border-color: rgba(255, 27, 53, 1);
+            font-weight: bold;
+        }
     </style>
 </head>
-<body class="theme-pastel">
+<body>
     <!-- Header -->
     <header class="sticky top-0 z-40 glass-effect shadow-lg">
         <div class="max-w-7xl mx-auto px-4 py-6">
@@ -160,7 +196,7 @@
                 <div class="floating">
                     <h1 class="text-4xl font-bold">✨ <span class="gradient-text">แกลเลอรีกิจกรรม</span> ✨</h1>
                     <p class="text-sm mt-1 font-medium">💕 ชมรูปสวยๆ จากกิจกรรม 📸</p>
-                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">📦 v3.0 - ใช้งานได้เลย</p>
+                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">📦 v3.1 Final</p>
                 </div>
                 
                 <div class="flex gap-2">
@@ -189,13 +225,9 @@
                 <button onclick="toggleAdmin()" class="btn-primary">← ออก</button>
             </div>
 
-            <!-- สร้างโฟลเดอร์ -->
+            <!-- โฟลเดอร์หลัก (ไม่สามารถแก้ไขได้) -->
             <div class="card">
                 <h3 class="text-2xl font-bold gradient-text mb-4">📁 โฟลเดอร์</h3>
-                <div class="flex gap-2 mb-4">
-                    <input type="text" id="newFolderName" placeholder="ชื่อโฟลเดอร์ใหม่" class="flex-1 px-4 py-2 border-2 border-pink-300 rounded-xl">
-                    <button onclick="createFolder()" class="btn-primary">➕ สร้าง</button>
-                </div>
                 <div id="foldersList" class="flex flex-wrap gap-2"></div>
             </div>
 
@@ -207,7 +239,7 @@
                     <p class="text-4xl mb-2">📤</p>
                     <p class="text-lg font-bold">ลากรูปมาที่นี่ หรือ คลิก</p>
                     <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFileSelect(event)" style="display: none;">
-                    <input type="text" placeholder="หรือใส่ URL รูปภาพ" id="imageUrl" class="mt-4 w-full px-4 py-2 border-2 border-pink-300 rounded-xl">
+                    <input type="text" placeholder="หรือใส่ URL รูปภาพ" id="imageUrl" class="mt-4 w-full px-4 py-2 border-2 rounded-xl" style="border-color: rgba(236, 72, 153, 0.5);" onfocus="this.style.borderColor='rgba(236, 72, 153, 1)'" onblur="this.style.borderColor='rgba(236, 72, 153, 0.5)'">
                     <button onclick="document.getElementById('fileInput').click()" class="btn-primary mt-4">📁 เลือกรูป</button>
                     <button onclick="addImageFromUrl()" class="btn-primary mt-2">🔗 เพิ่มจาก URL</button>
                 </div>
@@ -232,12 +264,16 @@
 
     <script>
         const ADMIN_PASSWORD = '434143';
-        let currentTheme = localStorage.getItem('theme') || 'pastel';
         let isAdmin = false;
-        let currentFolder = 'default';
+        let currentFolder = 'event';
         let selectedFiles = [];
+        let currentTheme = localStorage.getItem('theme') || 'pastel';
+        
+        // 3 โฟลเดอร์หลัก
         let galleries = JSON.parse(localStorage.getItem('galleries')) || {
-            'default': { name: 'กิจกรรมทั่วไป', images: [] }
+            'event': { name: '🎪 กิจกรรมวิ่งสุดโล', icon: '🎪', images: [] },
+            'art': { name: '🎨 กิจกรรมสร้างศรรค', icon: '🎨', images: [] },
+            'sports': { name: '👟 กิจกรรมแข่งวิ่ง', icon: '👟', images: [] }
         };
 
         window.onload = () => {
@@ -277,27 +313,12 @@
             }
         }
 
-        function createFolder() {
-            const name = document.getElementById('newFolderName').value.trim();
-            if (!name) {
-                alert('⚠️ ใส่ชื่อโฟลเดอร์');
-                return;
-            }
-
-            const id = 'folder_' + Date.now();
-            galleries[id] = { name: name, images: [] };
-            localStorage.setItem('galleries', JSON.stringify(galleries));
-            document.getElementById('newFolderName').value = '';
-            updateFoldersList();
-            alert('✅ สร้างโฟลเดอร์สำเร็จ');
-        }
-
         function updateFoldersList() {
             const list = document.getElementById('foldersList');
             list.innerHTML = Object.entries(galleries).map(([id, folder]) => `
                 <div class="folder-btn ${id === currentFolder ? 'active' : ''}" onclick="selectFolder('${id}')">
-                    📁 ${folder.name}
-                    ${id !== 'default' ? `<button onclick="event.stopPropagation(); deleteFolder('${id}')" class="ml-2 text-red-500">🗑️</button>` : ''}
+                    ${folder.icon} ${folder.name}
+                    <span class="ml-2 text-xs">(${folder.images.length})</span>
                 </div>
             `).join('');
         }
@@ -305,15 +326,6 @@
         function selectFolder(id) {
             currentFolder = id;
             updateFoldersList();
-        }
-
-        function deleteFolder(id) {
-            if (confirm('ต้องการลบโฟลเดอร์นี้?')) {
-                delete galleries[id];
-                currentFolder = 'default';
-                localStorage.setItem('galleries', JSON.stringify(galleries));
-                updateFoldersList();
-            }
         }
 
         function handleDrop(e) {
@@ -345,6 +357,7 @@
             document.getElementById('imageUrl').value = '';
             alert('✅ เพิ่มรูปสำเร็จ');
             loadGallery();
+            updateFoldersList();
         }
 
         function showPreview() {
@@ -373,6 +386,7 @@
             }
 
             const images = galleries[currentFolder].images || [];
+            let uploaded = 0;
 
             selectedFiles.forEach(file => {
                 const reader = new FileReader();
@@ -382,17 +396,21 @@
                         src: e.target.result,
                         name: file.name
                     });
-                    galleries[currentFolder].images = images;
-                    localStorage.setItem('galleries', JSON.stringify(galleries));
+                    uploaded++;
+                    
+                    if (uploaded === selectedFiles.length) {
+                        galleries[currentFolder].images = images;
+                        localStorage.setItem('galleries', JSON.stringify(galleries));
+                        selectedFiles = [];
+                        document.getElementById('imagePreview').innerHTML = '';
+                        document.getElementById('uploadBtn').classList.add('hidden');
+                        alert('✅ อัพโหลดรูปสำเร็จ');
+                        loadGallery();
+                        updateFoldersList();
+                    }
                 };
                 reader.readAsDataURL(file);
             });
-
-            selectedFiles = [];
-            document.getElementById('imagePreview').innerHTML = '';
-            document.getElementById('uploadBtn').classList.add('hidden');
-            alert('✅ อัพโหลดรูปสำเร็จ');
-            loadGallery();
         }
 
         function loadGallery() {
@@ -403,7 +421,7 @@
                     html += `
                         <div class="mb-16">
                             <div class="card mb-8">
-                                <h2 class="text-3xl font-bold gradient-text">📁 ${folder.name}</h2>
+                                <h2 class="text-3xl font-bold gradient-text">${folder.icon} ${folder.name}</h2>
                                 <p class="text-gray-600 mt-2">${folder.images.length} รูป</p>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
