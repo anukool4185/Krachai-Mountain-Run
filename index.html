@@ -168,6 +168,16 @@
             max-height: 70vh;
             overflow-y: auto;
         }
+
+        .error-msg {
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid rgba(255, 0, 0, 0.3);
+            color: #ff0000;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="theme-pastel">
@@ -181,9 +191,7 @@
                 </div>
                 
                 <div class="hidden-mobile flex gap-2">
-                    <!-- ปุ่มแอดมิน (เห็นเสมอ) -->
                     <button id="adminBtn" onclick="toggleAdmin()" class="btn-primary">🔐 Admin</button>
-                    <!-- ปุ่มเข้าสู่ Google (เฉพาะแอดมินเท่านั้น) -->
                     <button id="googleSignInBtn" class="btn-primary hidden">🔐 เข้าสู่ Google</button>
                     <button id="googleSignOutBtn" class="btn-primary hidden">👤 ออกจากระบบ</button>
                     <button onclick="toggleTheme()" class="btn-primary">🌓</button>
@@ -194,10 +202,10 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-12 main-content">
-        <!-- Gallery (สำหรับผู้ใช้ทั่วไป) -->
+        <!-- Gallery -->
         <div id="galleryView" class="space-y-8"></div>
 
-        <!-- Admin Panel (เฉพาะแอดมิน) -->
+        <!-- Admin Panel -->
         <div id="adminPanel" class="hidden admin-panel space-y-6">
             <div class="flex justify-between items-center">
                 <h2 class="text-3xl font-bold">👤 Admin Panel</h2>
@@ -257,8 +265,18 @@
     </div>
 
     <script>
-        // ⚠️ ต้องแทนค่า CLIENT_ID ของคุณที่นี่
+        // ⚠️ ⚠️ ⚠️ ต้องแทนค่า 3 ตัวนี้ ⚠️ ⚠️ ⚠️
+        
+        // 1. CLIENT_ID - จาก Google Cloud Console → Credentials
         const CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
+        
+        // 2. API_KEY - จาก Google Cloud Console → Credentials
+        const API_KEY = 'YOUR_API_KEY';
+        
+        // 3. FOLDER_ID - จาก Google Drive URL
+        // https://drive.google.com/drive/folders/[ตัวนี้]
+        const GOOGLE_DRIVE_FOLDER_ID = '1Ymln5xGCN2GjplQujJIcmHbOwFLAlMaI';
+
         const SCOPES = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets';
         const ADMIN_PASSWORD = '434143';
 
@@ -317,8 +335,14 @@
 
         async function initializeGoogleAPI() {
             try {
+                // ⚠️ ตรวจสอบว่าแทนค่า API_KEY แล้ว
+                if (API_KEY === 'YOUR_API_KEY') {
+                    showNotification('❌ ต้องแทนค่า API_KEY ก่อน', 'error');
+                    return;
+                }
+
                 await gapi.client.init({
-                    apiKey: 'YOUR_API_KEY',
+                    apiKey: API_KEY,
                     clientId: CLIENT_ID,
                     scope: SCOPES,
                     discoveryDocs: [
@@ -329,6 +353,7 @@
                 gapi_loaded = true;
             } catch (error) {
                 console.error('ข้อผิดพลาด:', error);
+                showNotification('❌ ข้อผิดพลาด: ' + error.message, 'error');
             }
         }
 
@@ -381,13 +406,24 @@
 
         async function loadGalleryForPublic() {
             try {
-                const rootFolderId = '1Ymln5xGCN2GjplQujJIcmHbOwFLAlMaI'; // Google Drive Folder ID
-                
+                // ⚠️ ตรวจสอบว่าแทนค่า API_KEY แล้ว
+                if (API_KEY === 'YOUR_API_KEY') {
+                    document.getElementById('galleryView').innerHTML = `
+                        <div class="error-msg">
+                            ❌ ต้องแทนค่า API_KEY ในไฟล์ index.html ก่อน<br>
+                            ดู console เพื่อรายละเอียด
+                        </div>
+                    `;
+                    return;
+                }
+
                 const response = await fetch(
-                    `https://www.googleapis.com/drive/v3/files?q='${rootFolderId}' in parents and mimeType='application/vnd.google-apps.folder'&fields=files(id,name)&key=YOUR_API_KEY`
+                    `https://www.googleapis.com/drive/v3/files?q='${GOOGLE_DRIVE_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder'&fields=files(id,name)&key=${API_KEY}`
                 );
                 
-                if (!response.ok) throw new Error('ไม่สามารถดึงข้อมูล');
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
                 
                 const data = await response.json();
                 const folders = data.files || [];
@@ -395,7 +431,7 @@
                 let html = '';
                 for (const folder of folders) {
                     const imagesResponse = await fetch(
-                        `https://www.googleapis.com/drive/v3/files?q='${folder.id}' in parents and mimeType contains 'image/'&fields=files(id,name,webViewLink)&key=YOUR_API_KEY`
+                        `https://www.googleapis.com/drive/v3/files?q='${folder.id}' in parents and mimeType contains 'image/'&fields=files(id,name,webViewLink)&key=${API_KEY}`
                     );
                     const imagesData = await imagesResponse.json();
                     const images = imagesData.files || [];
@@ -433,7 +469,12 @@
                 document.getElementById('galleryView').innerHTML = html;
             } catch (error) {
                 console.error('ข้อผิดพลาด:', error);
-                document.getElementById('galleryView').innerHTML = '<p class="text-center text-2xl">❌ ข้อผิดพลาด</p>';
+                document.getElementById('galleryView').innerHTML = `
+                    <div class="error-msg">
+                        ❌ ข้อผิดพลาด: ${error.message}<br>
+                        ตรวจสอบ API_KEY และ FOLDER_ID
+                    </div>
+                `;
             }
         }
 
