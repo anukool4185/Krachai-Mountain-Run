@@ -656,8 +656,28 @@
 
                 const blob = base64ToBlob(json.base64, json.mimeType);
                 const fileName = json.name || currentFileName || 'image.jpg';
+                const file = new File([blob], fileName, { type: json.mimeType });
 
-                // วิธีที่ 1: File System Access API (เลือกที่เก็บได้) — Chrome/Edge
+                // ตรวจว่าเป็นมือถือหรือไม่
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+                // ===== วิธีที่ 1: Web Share API (มือถือ) → บันทึกลงรูปภาพได้จริง =====
+                if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: fileName
+                        });
+                        status.innerHTML = '✅ บันทึกสำเร็จ!';
+                        btn.disabled = false;
+                        return;
+                    } catch (e) {
+                        if (e.name === 'AbortError') { status.innerHTML = ''; btn.disabled = false; return; }
+                        // ถ้า share ล้มเหลว → ลองวิธีถัดไป
+                    }
+                }
+
+                // ===== วิธีที่ 2: File System Access API (Desktop Chrome/Edge) → เลือกที่เก็บ =====
                 if (window.showSaveFilePicker) {
                     try {
                         const ext = fileName.includes('.') ? fileName.split('.').pop() : 'jpg';
@@ -673,19 +693,18 @@
                         return;
                     } catch (e) {
                         if (e.name === 'AbortError') { status.innerHTML = ''; btn.disabled = false; return; }
-                        // ถ้า picker ล้มเหลว → ใช้วิธีที่ 2
                     }
                 }
 
-                // วิธีที่ 2: ดาวน์โหลดปกติ (ลงโฟลเดอร์ Downloads)
+                // ===== วิธีที่ 3: ดาวน์โหลดปกติ (fallback) =====
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
                 link.download = fileName;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                URL.revokeObjectURL(link.href);
-                status.innerHTML = '✅ บันทึกลงโฟลเดอร์ Downloads แล้ว!';
+                setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+                status.innerHTML = '✅ บันทึกแล้ว!';
             } catch (err) {
                 status.innerHTML = '❌ ' + err.message;
             }
