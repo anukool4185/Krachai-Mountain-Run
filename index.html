@@ -195,7 +195,7 @@
                 <div class="floating">
                     <h1 class="text-4xl font-bold">✨ <span class="gradient-text">แกลเลอรีกิจกรรม</span> ✨</h1>
                     <p class="text-sm mt-1 font-medium">💕 ชมรูปสวยๆ จากกิจกรรม 📸</p>
-                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v7.1 - กล้อง+ลบรูปได้</p>
+                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v7.2 - ลบหลายรูปพร้อมกัน</p>
                 </div>
                 <div class="flex gap-2">
                     <button id="adminBtn" onclick="toggleAdmin()" class="btn-primary">🔐 เข้าสู่ระบบ</button>
@@ -224,6 +224,7 @@
                 <span id="floatCount" class="font-bold text-sm px-2">0 รูป</span>
                 <button onclick="downloadSelected()" class="float-btn">⬇️ ดาวน์โหลด</button>
                 <button onclick="shareSelected()" class="float-btn">📤 แชร์</button>
+                <button id="floatDeleteBtn" onclick="deleteSelected()" class="float-btn hidden" style="background:linear-gradient(135deg,#ef4444,#dc2626);">🗑️ ลบ</button>
                 <button onclick="clearSelection()" class="float-btn" style="padding:10px 14px;">✕</button>
             </div>
         </div>
@@ -576,12 +577,42 @@
         function updateFloatingBar() {
             const count = Object.keys(selectedImages).length;
             const bar = document.getElementById('floatingBar');
+            // ปุ่มลบ → แสดงเฉพาะตอน login (แอดมิน/ผู้ช่วย)
+            document.getElementById('floatDeleteBtn').classList.toggle('hidden', !isAdmin);
             if (count >= 1) {
                 bar.classList.remove('hidden-bar');
                 document.getElementById('floatCount').textContent = count + ' รูป';
             } else {
                 bar.classList.add('hidden-bar');
             }
+        }
+
+        // ลบหลายรูปพร้อมกัน (เฉพาะคน login)
+        async function deleteSelected() {
+            const imgs = Object.values(selectedImages);
+            if (imgs.length === 0) return;
+            if (!confirm(`ต้องการลบ ${imgs.length} รูป ออกจาก Google Drive?`)) return;
+
+            const bar = document.getElementById('floatCount');
+            let done = 0;
+            for (const img of imgs) {
+                bar.textContent = `กำลังลบ ${done + 1}/${imgs.length}...`;
+                try {
+                    const res = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'deleteImage', fileId: img.id })
+                    });
+                    const json = await res.json();
+                    if (json.success) {
+                        const arr = driveData[viewingZone].subfolders[viewingSub].images;
+                        const idx = arr.findIndex(i => i.id === img.id);
+                        if (idx >= 0) arr.splice(idx, 1);
+                        done++;
+                    }
+                } catch (e) { console.error(e); }
+            }
+            clearSelection();
+            viewSubfolder(viewingZone, viewingSub); // refresh
         }
 
         function clearSelection() {
