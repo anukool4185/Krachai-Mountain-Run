@@ -175,10 +175,10 @@
                 <div class="floating">
                     <h1 class="text-4xl font-bold">✨ <span class="gradient-text">แกลเลอรีกิจกรรม</span> ✨</h1>
                     <p class="text-sm mt-1 font-medium">💕 ชมรูปสวยๆ จากกิจกรรม 📸</p>
-                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v6.5 - ซูมลื่นไม่สั่น</p>
+                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v7.0 - แอดมิน+ผู้ช่วย+กล้อง</p>
                 </div>
                 <div class="flex gap-2">
-                    <button id="adminBtn" onclick="toggleAdmin()" class="btn-primary">🔐 Admin</button>
+                    <button id="adminBtn" onclick="toggleAdmin()" class="btn-primary">🔐 เข้าสู่ระบบ</button>
                     <button onclick="toggleTheme()" class="btn-primary">🌓</button>
                 </div>
             </div>
@@ -247,6 +247,33 @@
         </div>
     </main>
 
+    <!-- Login Modal -->
+    <div id="loginModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);">
+        <div class="card max-w-sm w-full">
+            <h2 class="text-2xl font-bold gradient-text mb-1 text-center">🔐 เข้าสู่ระบบ</h2>
+            <p class="text-sm text-center opacity-70 mb-5">แอดมิน / ผู้ช่วยแอดมิน</p>
+            <input type="text" id="loginUser" placeholder="ชื่อผู้ใช้ (username)" class="setup-input" autocomplete="username">
+            <input type="password" id="loginPass" placeholder="รหัสผ่าน (password)" class="setup-input" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+            <div id="loginError" class="text-red-500 text-sm text-center mb-3 hidden">❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
+            <div class="flex gap-2">
+                <button onclick="doLogin()" class="btn-primary flex-1">เข้าสู่ระบบ</button>
+                <button onclick="closeLogin()" class="flex-1 bg-gray-300 text-gray-800 py-3 rounded-xl font-bold">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="cameraModal" class="hidden fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
+        <div id="cameraFlash" class="fixed inset-0 bg-white pointer-events-none" style="opacity:0; transition:opacity 0.15s; z-index:60;"></div>
+        <video id="cameraVideo" autoplay playsinline class="max-w-full max-h-[75vh] rounded-xl"></video>
+        <div class="flex gap-4 items-center mt-6">
+            <button onclick="closeCamera()" class="bg-white/20 text-white rounded-full w-14 h-14 text-xl backdrop-blur">✕</button>
+            <button onclick="capturePhoto()" class="bg-white rounded-full w-20 h-20 border-4 border-pink-400 flex items-center justify-center text-4xl active:scale-90 transition-transform">📷</button>
+            <button onclick="closeCamera()" class="btn-primary">✅ เสร็จ</button>
+        </div>
+        <p class="text-white/60 text-sm mt-4">กดปุ่มกล้องเพื่อถ่าย • ถ่ายได้หลายรูป • กด "เสร็จ" แล้วอัพโหลด</p>
+    </div>
+
     <!-- Image Modal -->
     <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden" style="touch-action: none;">
         <!-- ปุ่มควบคุมด้านบน -->
@@ -277,13 +304,21 @@
     </div>
 
     <script>
-        const ADMIN_PASSWORD = 'admin123';
+        // ========== ผู้ใช้ระบบ (แก้ user/password ได้ที่นี่) ==========
+        // role: 'admin' = สิทธิ์เต็ม (สร้าง/ลบโซน-กิจกรรมย่อย + อัพโหลด)
+        //       'assistant' = ผู้ช่วย (อัพโหลดรูปเข้ากิจกรรมย่อยที่มีอยู่ได้อย่างเดียว)
+        const USERS = {
+            'admin':  { password: 'admin123',  role: 'admin',     name: 'แอดมิน' },
+            'helper': { password: 'helper123', role: 'assistant', name: 'ผู้ช่วยแอดมิน' }
+        };
 
         // Web App URL — ค่าเริ่มต้นเป็น URL ที่คุณให้มา (แก้ได้ผ่านปุ่ม ⚙️ URL)
         let WEB_APP_URL = localStorage.getItem('web_app_url') ||
             'https://script.google.com/macros/s/AKfycbxbGLgG6o0G4_aIm3lvMrNUj_0QLcif-dJkb4DGtO2h4F9KbvIFehf7jje_uKpvKTJiGQ/exec';
 
-        let isAdmin = false;
+        let isAdmin = false;        // login แล้ว (admin หรือ assistant)
+        let currentRole = null;     // 'admin' | 'assistant'
+        let currentUserName = '';   // ชื่อที่แสดง
         let currentTheme = localStorage.getItem('theme') || 'pastel';
         let currentZone = null, currentSub = null, selectedFiles = [];
 
@@ -436,18 +471,37 @@
         }
 
         // ========== ดูรูป ==========
+        let viewingZone = null, viewingSub = null; // จำว่ากำลังดูกิจกรรมย่อยไหน (ใช้ตอนผู้ช่วยอัพโหลด)
+
         function viewSubfolder(zoneId, subId) {
             const meta = ZONE_META[zoneId];
             const sub = driveData[zoneId].subfolders[subId];
             const iconClass = getIconClass(zoneId);
             clearSelection(); // เคลียร์รูปที่เลือกไว้
+            viewingZone = zoneId; viewingSub = subId;
 
             let html = `
                 <div class="card mb-8">
                     <h2 class="text-3xl font-bold gradient-text"><span class="${iconClass}">${meta.icon}</span> ${sub.name}</h2>
                     <p class="text-gray-500 mt-2">${meta.name} • ${sub.images ? sub.images.length : 0} รูป</p>
-                    <p class="text-xs text-gray-400 mt-1">💡 ติ๊ก ☑ มุมขวาบนเพื่อเลือกหลายรูป</p>
-                </div>`;
+                    <p class="text-xs text-gray-400 mt-1">💡 ติ๊ก ☑ มุมขวาบนเพื่อเลือกหลายรูป</p>`;
+
+            // ปุ่มอัพโหลด + กล้อง — แสดงเมื่อ login เป็นแอดมินหรือผู้ช่วย
+            if (isAdmin) {
+                html += `
+                    <div class="mt-4 pt-4 border-t-2" style="border-color: rgba(168,85,247,0.2);">
+                        <div class="flex flex-wrap gap-2">
+                            <input type="file" id="helperFileInput" multiple accept="image/*" onchange="helperHandleFiles(event)" style="display:none;">
+                            <button onclick="document.getElementById('helperFileInput').click()" class="btn-primary">📤 อัพโหลดรูป</button>
+                            <button onclick="openCamera()" class="btn-primary">📷 ถ่ายภาพสด</button>
+                        </div>
+                        <div id="helperPreview" class="grid grid-cols-3 md:grid-cols-6 gap-3 mt-4"></div>
+                        <button id="helperUploadBtn" onclick="helperUpload()" class="btn-primary w-full mt-4 hidden">✅ อัพโหลดไป Google Drive</button>
+                        <div id="helperStatus" class="text-center mt-3"></div>
+                    </div>`;
+            }
+
+            html += `</div>`;
 
             if (sub.images && sub.images.length > 0) {
                 html += `<div class="grid grid-cols-2 md:grid-cols-4 gap-4">`;
@@ -472,6 +526,7 @@
         }
         function backToGallery() {
             clearSelection();
+            helperFiles = []; // เคลียร์รูปที่เตรียมอัพโหลด
             document.getElementById('imagesView').classList.add('hidden');
             document.getElementById('galleryView').classList.remove('hidden');
         }
@@ -510,27 +565,67 @@
             if (bar) bar.classList.add('hidden-bar');
         }
 
-        // ========== Admin ==========
+        // ========== Login / Logout ==========
+        // ปุ่มบน header: ยังไม่ login → เปิด login modal, login แล้ว → logout
         function toggleAdmin() {
             if (!isAdmin) {
-                const p = prompt('🔐 ใส่รหัส Admin:');
-                if (p === ADMIN_PASSWORD) {
-                    isAdmin = true;
-                    document.getElementById('adminPanel').classList.remove('hidden');
-                    document.getElementById('galleryView').classList.add('hidden');
-                    document.getElementById('imagesView').classList.add('hidden');
-                    document.getElementById('adminBtn').textContent = '← ออก';
-                    updateZonesList();
-                } else if (p !== null) alert('❌ รหัสไม่ถูกต้อง');
+                openLogin();
             } else {
-                isAdmin = false; currentZone = null; currentSub = null;
-                document.getElementById('adminPanel').classList.add('hidden');
-                document.getElementById('subManageSection').classList.add('hidden');
-                document.getElementById('uploadSection').classList.add('hidden');
-                document.getElementById('galleryView').classList.remove('hidden');
-                document.getElementById('adminBtn').textContent = '🔐 Admin';
-                loadFromDrive();
+                logout();
             }
+        }
+
+        function openLogin() {
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPass').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('loginModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('loginUser').focus(), 100);
+        }
+        function closeLogin() {
+            document.getElementById('loginModal').classList.add('hidden');
+        }
+
+        function doLogin() {
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value;
+            const user = USERS[u];
+
+            if (!user || user.password !== p) {
+                document.getElementById('loginError').classList.remove('hidden');
+                return;
+            }
+
+            // login สำเร็จ
+            isAdmin = true;
+            currentRole = user.role;
+            currentUserName = user.name;
+            closeLogin();
+
+            if (currentRole === 'admin') {
+                // แอดมิน → เข้า Admin Panel เต็ม
+                document.getElementById('adminPanel').classList.remove('hidden');
+                document.getElementById('galleryView').classList.add('hidden');
+                document.getElementById('imagesView').classList.add('hidden');
+                document.getElementById('adminBtn').textContent = '← ออก (' + currentUserName + ')';
+                updateZonesList();
+            } else {
+                // ผู้ช่วย → อยู่หน้าแกลเลอรีปกติ แต่มีปุ่มอัพโหลดในกิจกรรมย่อย
+                document.getElementById('adminBtn').textContent = '← ออก (' + currentUserName + ')';
+                loadFromDrive(); // โหลดใหม่ให้ปุ่มอัพโหลดโผล่
+            }
+        }
+
+        function logout() {
+            isAdmin = false; currentRole = null; currentUserName = '';
+            currentZone = null; currentSub = null;
+            document.getElementById('adminPanel').classList.add('hidden');
+            document.getElementById('subManageSection').classList.add('hidden');
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('galleryView').classList.remove('hidden');
+            document.getElementById('imagesView').classList.add('hidden');
+            document.getElementById('adminBtn').textContent = '🔐 เข้าสู่ระบบ';
+            loadFromDrive();
         }
 
         function updateZonesList() {
@@ -662,6 +757,116 @@
             status.innerHTML = `✅ อัพโหลด ${done} รูปสำเร็จ!`;
             updateSubfoldersList();
             setTimeout(() => status.innerHTML = '', 3000);
+        }
+
+        // ========== อัพโหลด/ถ่ายภาพ (แอดมิน + ผู้ช่วย ในหน้ากิจกรรมย่อย) ==========
+        let helperFiles = []; // {file, url}
+
+        function helperHandleFiles(e) {
+            const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
+            files.forEach(f => helperFiles.push({ file: f, url: URL.createObjectURL(f) }));
+            e.target.value = ''; // เคลียร์เพื่อเลือกซ้ำได้
+            helperShowPreview();
+        }
+
+        function helperShowPreview() {
+            const pv = document.getElementById('helperPreview');
+            if (!pv) return;
+            pv.innerHTML = helperFiles.map((item, i) => `
+                <div class="relative">
+                    <img src="${item.url}" class="w-full h-20 object-cover rounded-lg border-2">
+                    <button onclick="helperRemove(${i})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs font-bold">✕</button>
+                </div>`).join('');
+            const btn = document.getElementById('helperUploadBtn');
+            if (btn) btn.classList.toggle('hidden', helperFiles.length === 0);
+        }
+
+        function helperRemove(i) {
+            helperFiles.splice(i, 1);
+            helperShowPreview();
+        }
+
+        async function helperUpload() {
+            if (!viewingSub) { alert('⚠️ ไม่พบกิจกรรมปลายทาง'); return; }
+            if (helperFiles.length === 0) { alert('⚠️ เลือกรูปหรือถ่ายภาพก่อน'); return; }
+
+            const btn = document.getElementById('helperUploadBtn');
+            const status = document.getElementById('helperStatus');
+            btn.disabled = true;
+
+            let done = 0;
+            for (const item of helperFiles) {
+                status.innerHTML = `<div class="spinner"></div> กำลังอัพโหลด ${done + 1}/${helperFiles.length}...`;
+                try {
+                    const base64 = await fileToBase64(item.file);
+                    const res = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'uploadImage', subId: viewingSub, fileName: item.file.name || ('photo_' + Date.now() + '.jpg'), base64: base64 })
+                    });
+                    const json = await res.json();
+                    if (json.success) {
+                        driveData[viewingZone].subfolders[viewingSub].images.push({ id: json.id, name: json.name, src: json.src });
+                        done++;
+                    }
+                } catch (err) { console.error(err); }
+            }
+
+            helperFiles = [];
+            document.getElementById('helperPreview').innerHTML = '';
+            btn.classList.add('hidden');
+            btn.disabled = false;
+            status.innerHTML = `✅ อัพโหลด ${done} รูปสำเร็จ!`;
+            // โหลดรูปใหม่ในหน้านี้
+            setTimeout(() => viewSubfolder(viewingZone, viewingSub), 1500);
+        }
+
+        // ========== กล้องถ่ายภาพสด ==========
+        let cameraStream = null;
+
+        async function openCamera() {
+            document.getElementById('cameraModal').classList.remove('hidden');
+            const video = document.getElementById('cameraVideo');
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }, audio: false
+                });
+                video.srcObject = cameraStream;
+            } catch (err) {
+                // ลองกล้องหน้าถ้ากล้องหลังไม่ได้
+                try {
+                    cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    video.srcObject = cameraStream;
+                } catch (e) {
+                    alert('❌ เปิดกล้องไม่ได้: ' + e.message + '\n(ต้องเปิดผ่าน HTTPS และอนุญาตใช้กล้อง)');
+                    closeCamera();
+                }
+            }
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            canvas.toBlob((blob) => {
+                const name = 'photo_' + Date.now() + '.jpg';
+                const file = new File([blob], name, { type: 'image/jpeg' });
+                helperFiles.push({ file: file, url: URL.createObjectURL(blob) });
+                helperShowPreview();
+                // แสดง flash feedback
+                const flash = document.getElementById('cameraFlash');
+                flash.style.opacity = '1';
+                setTimeout(() => flash.style.opacity = '0', 150);
+            }, 'image/jpeg', 0.92);
+        }
+
+        function closeCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+            document.getElementById('cameraModal').classList.add('hidden');
         }
 
         // ========== Modal ==========
