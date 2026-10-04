@@ -195,9 +195,10 @@
                 <div class="floating">
                     <h1 class="text-4xl font-bold">✨ <span class="gradient-text">แกลเลอรีกิจกรรม</span> ✨</h1>
                     <p class="text-sm mt-1 font-medium">💕 ชมรูปสวยๆ จากกิจกรรม 📸</p>
-                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v7.2 - ลบหลายรูปพร้อมกัน</p>
+                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v7.3 - แอดมินทำได้ทุกอย่าง</p>
                 </div>
                 <div class="flex gap-2">
+                    <button id="manageBtn" onclick="openAdminPanel()" class="btn-primary hidden">⚙️ จัดการ</button>
                     <button id="adminBtn" onclick="toggleAdmin()" class="btn-primary">🔐 เข้าสู่ระบบ</button>
                     <button onclick="toggleTheme()" class="btn-primary">🌓</button>
                 </div>
@@ -235,7 +236,7 @@
                 <h2 class="text-3xl font-bold gradient-text">👤 Admin Panel</h2>
                 <div class="flex gap-2">
                     <button onclick="openSetup()" class="btn-primary">⚙️ URL</button>
-                    <button onclick="toggleAdmin()" class="btn-primary">← ออก</button>
+                    <button onclick="backFromAdminPanel()" class="btn-primary">← กลับหน้าแกลเลอรี</button>
                 </div>
             </div>
 
@@ -660,18 +661,30 @@
             currentUserName = user.name;
             closeLogin();
 
-            if (currentRole === 'admin') {
-                // แอดมิน → เข้า Admin Panel เต็ม
-                document.getElementById('adminPanel').classList.remove('hidden');
-                document.getElementById('galleryView').classList.add('hidden');
-                document.getElementById('imagesView').classList.add('hidden');
-                document.getElementById('adminBtn').textContent = '← ออก (' + currentUserName + ')';
-                updateZonesList();
-            } else {
-                // ผู้ช่วย → อยู่หน้าแกลเลอรีปกติ แต่มีปุ่มอัพโหลดในกิจกรรมย่อย
-                document.getElementById('adminBtn').textContent = '← ออก (' + currentUserName + ')';
-                loadFromDrive(); // โหลดใหม่ให้ปุ่มอัพโหลดโผล่
-            }
+            document.getElementById('adminBtn').textContent = '← ออก (' + currentUserName + ')';
+            // แอดมินเท่านั้นที่เห็นปุ่ม "⚙️ จัดการ" (สร้าง/ลบโซน-กิจกรรม)
+            document.getElementById('manageBtn').classList.toggle('hidden', currentRole !== 'admin');
+
+            // ทั้งแอดมินและผู้ช่วย → อยู่หน้าแกลเลอรี (จะเห็นปุ่มกล้อง/อัพโหลด/ลบ ในกิจกรรมย่อย)
+            loadFromDrive();
+        }
+
+        // แอดมินเปิด Admin Panel (จัดการโซน/กิจกรรมย่อย)
+        function openAdminPanel() {
+            document.getElementById('adminPanel').classList.remove('hidden');
+            document.getElementById('galleryView').classList.add('hidden');
+            document.getElementById('imagesView').classList.add('hidden');
+            updateZonesList();
+        }
+
+        // กลับจาก Admin Panel → หน้าแกลเลอรี (ยังคง login อยู่)
+        function backFromAdminPanel() {
+            currentZone = null; currentSub = null;
+            document.getElementById('adminPanel').classList.add('hidden');
+            document.getElementById('subManageSection').classList.add('hidden');
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('galleryView').classList.remove('hidden');
+            loadFromDrive();
         }
 
         function logout() {
@@ -682,6 +695,7 @@
             document.getElementById('uploadSection').classList.add('hidden');
             document.getElementById('galleryView').classList.remove('hidden');
             document.getElementById('imagesView').classList.add('hidden');
+            document.getElementById('manageBtn').classList.add('hidden');
             document.getElementById('adminBtn').textContent = '🔐 เข้าสู่ระบบ';
             loadFromDrive();
         }
