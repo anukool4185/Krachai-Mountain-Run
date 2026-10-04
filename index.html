@@ -69,6 +69,26 @@
         }
         .card-wrap.selected .image-card { border-color: #ec4899; transform: scale(0.96); }
 
+        /* ปุ่มลบรูปที่อัพแล้ว (มุมซ้ายบน) */
+        .del-btn {
+            position: absolute; top: 10px; left: 10px; z-index: 10;
+            width: 32px; height: 32px; cursor: pointer; border: none;
+            background: rgba(239,68,68,0.9); color: white; border-radius: 8px;
+            font-size: 16px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .del-btn:hover { background: #dc2626; }
+
+        /* แถบรูปที่ถ่ายในหน้ากล้อง */
+        .cam-strip { display: flex; gap: 8px; overflow-x: auto; max-width: 100%; padding: 4px; }
+        .cam-thumb { position: relative; flex-shrink: 0; }
+        .cam-thumb img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; border: 2px solid white; }
+        .cam-thumb button {
+            position: absolute; top: -6px; right: -6px; width: 22px; height: 22px;
+            background: #ef4444; color: white; border: 2px solid white; border-radius: 50%;
+            font-size: 12px; font-weight: bold; cursor: pointer; line-height: 1;
+        }
+
         /* รูปย่อวิ่ง (fly animation) */
         .fly-clone {
             position: fixed; z-index: 100; pointer-events: none;
@@ -175,7 +195,7 @@
                 <div class="floating">
                     <h1 class="text-4xl font-bold">✨ <span class="gradient-text">แกลเลอรีกิจกรรม</span> ✨</h1>
                     <p class="text-sm mt-1 font-medium">💕 ชมรูปสวยๆ จากกิจกรรม 📸</p>
-                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v7.0 - แอดมิน+ผู้ช่วย+กล้อง</p>
+                    <p class="text-xs opacity-80 bg-gradient-to-r from-pink-300 to-purple-300 text-gray-800 px-3 py-1 rounded-full inline-block mt-2 font-bold">☁️ v7.1 - กล้อง+ลบรูปได้</p>
                 </div>
                 <div class="flex gap-2">
                     <button id="adminBtn" onclick="toggleAdmin()" class="btn-primary">🔐 เข้าสู่ระบบ</button>
@@ -263,15 +283,20 @@
     </div>
 
     <!-- Camera Modal -->
-    <div id="cameraModal" class="hidden fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
+    <div id="cameraModal" class="hidden fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-3">
         <div id="cameraFlash" class="fixed inset-0 bg-white pointer-events-none" style="opacity:0; transition:opacity 0.15s; z-index:60;"></div>
-        <video id="cameraVideo" autoplay playsinline class="max-w-full max-h-[75vh] rounded-xl"></video>
-        <div class="flex gap-4 items-center mt-6">
+        <video id="cameraVideo" autoplay playsinline class="max-w-full max-h-[60vh] rounded-xl"></video>
+
+        <!-- แถบรูปที่ถ่ายไว้ -->
+        <div id="camStrip" class="cam-strip mt-3" style="min-height:4px;"></div>
+
+        <div class="flex gap-4 items-center mt-4">
             <button onclick="closeCamera()" class="bg-white/20 text-white rounded-full w-14 h-14 text-xl backdrop-blur">✕</button>
             <button onclick="capturePhoto()" class="bg-white rounded-full w-20 h-20 border-4 border-pink-400 flex items-center justify-center text-4xl active:scale-90 transition-transform">📷</button>
-            <button onclick="closeCamera()" class="btn-primary">✅ เสร็จ</button>
+            <button id="camUploadBtn" onclick="uploadFromCamera()" class="btn-primary" disabled style="opacity:0.5;">⬆️ อัพโหลด</button>
         </div>
-        <p class="text-white/60 text-sm mt-4">กดปุ่มกล้องเพื่อถ่าย • ถ่ายได้หลายรูป • กด "เสร็จ" แล้วอัพโหลด</p>
+        <p class="text-white/60 text-sm mt-3 text-center">กดปุ่มกล้องถ่ายได้หลายรูป • ลบได้ที่แถบด้านบน • กด "อัพโหลด" เพื่อบันทึกลง Drive</p>
+        <div id="camStatus" class="text-white text-center mt-2 text-sm"></div>
     </div>
 
     <!-- Image Modal -->
@@ -507,8 +532,10 @@
                 html += `<div class="grid grid-cols-2 md:grid-cols-4 gap-4">`;
                 sub.images.forEach(img => {
                     const imgJson = JSON.stringify({ id: img.id, name: img.name, src: img.src }).replace(/"/g, '&quot;');
+                    const delBtn = isAdmin ? `<button class="del-btn" onclick="deleteUploadedImage('${img.id}', event)" title="ลบรูปนี้">🗑️</button>` : '';
                     html += `<div class="card-wrap" id="wrap_${img.id}">
                         <input type="checkbox" class="sel-check" onchange="toggleSelect('${img.id}', this, ${imgJson})">
+                        ${delBtn}
                         <div class="image-card" onclick="openModal('${img.src}', '${img.name}', '${img.id}')">
                             <img src="${img.src}" alt="${img.name}" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/200?text=Loading'">
                         </div>
@@ -820,11 +847,42 @@
             setTimeout(() => viewSubfolder(viewingZone, viewingSub), 1500);
         }
 
+        // ลบรูปที่อัพโหลดไปแล้ว (เฉพาะคน login)
+        async function deleteUploadedImage(imgId, event) {
+            if (event) event.stopPropagation(); // กันเปิดภาพใหญ่
+            if (!confirm('ต้องการลบรูปนี้ออกจาก Google Drive?')) return;
+
+            const wrap = document.getElementById('wrap_' + imgId);
+            if (wrap) wrap.style.opacity = '0.4';
+
+            try {
+                const res = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'deleteImage', fileId: imgId })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    const imgs = driveData[viewingZone].subfolders[viewingSub].images;
+                    const idx = imgs.findIndex(i => i.id === imgId);
+                    if (idx >= 0) imgs.splice(idx, 1);
+                    delete selectedImages[imgId];
+                    viewSubfolder(viewingZone, viewingSub); // refresh
+                } else {
+                    alert('❌ ' + json.error);
+                    if (wrap) wrap.style.opacity = '1';
+                }
+            } catch (err) {
+                alert('❌ ' + err.message);
+                if (wrap) wrap.style.opacity = '1';
+            }
+        }
+
         // ========== กล้องถ่ายภาพสด ==========
         let cameraStream = null;
 
         async function openCamera() {
             document.getElementById('cameraModal').classList.remove('hidden');
+            updateCameraStrip(); // แสดงรูปที่มีอยู่ (ถ้ามี)
             const video = document.getElementById('cameraVideo');
             try {
                 cameraStream = await navigator.mediaDevices.getUserMedia({
@@ -853,12 +911,41 @@
                 const name = 'photo_' + Date.now() + '.jpg';
                 const file = new File([blob], name, { type: 'image/jpeg' });
                 helperFiles.push({ file: file, url: URL.createObjectURL(blob) });
-                helperShowPreview();
-                // แสดง flash feedback
+                helperShowPreview();      // อัปเดต preview ในหน้ากิจกรรม (เบื้องหลัง)
+                updateCameraStrip();      // อัปเดตแถบในหน้ากล้อง
+                // flash feedback
                 const flash = document.getElementById('cameraFlash');
                 flash.style.opacity = '1';
                 setTimeout(() => flash.style.opacity = '0', 150);
             }, 'image/jpeg', 0.92);
+        }
+
+        // แถบรูปที่ถ่ายในหน้ากล้อง (ลบได้ก่อนอัพโหลด)
+        function updateCameraStrip() {
+            const strip = document.getElementById('camStrip');
+            strip.innerHTML = helperFiles.map((item, i) => `
+                <div class="cam-thumb">
+                    <img src="${item.url}">
+                    <button onclick="removeCameraPhoto(${i})">✕</button>
+                </div>`).join('');
+            const btn = document.getElementById('camUploadBtn');
+            const n = helperFiles.length;
+            btn.disabled = n === 0;
+            btn.style.opacity = n === 0 ? '0.5' : '1';
+            btn.textContent = n > 0 ? `⬆️ อัพโหลด (${n})` : '⬆️ อัพโหลด';
+        }
+
+        function removeCameraPhoto(i) {
+            helperFiles.splice(i, 1);
+            updateCameraStrip();
+            helperShowPreview();
+        }
+
+        // ปุ่มอัพโหลดในกล้อง → ปิดกล้อง + อัพโหลดเลย
+        async function uploadFromCamera() {
+            if (helperFiles.length === 0) return;
+            closeCamera();
+            await helperUpload();
         }
 
         function closeCamera() {
@@ -867,6 +954,7 @@
                 cameraStream = null;
             }
             document.getElementById('cameraModal').classList.add('hidden');
+            document.getElementById('camStatus').innerHTML = '';
         }
 
         // ========== Modal ==========
